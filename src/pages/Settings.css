@@ -1,0 +1,85 @@
+.settings-container {
+  max-width: 800px;
+}
+
+.settings-title {
+  margin-bottom: 25px;
+  font-size: 28px;
+}
+
+/* CARD STYLE */
+.settings-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+/* HEADER */
+.card-header h2 {
+  margin: 0;
+}
+
+.subtext {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* THEME ROW */
+.theme-row {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* TOGGLE */
+.toggle {
+  width: 50px;
+  height: 26px;
+  background: var(--border-subtle);
+  border-radius: 50px;
+  position: relative;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.toggle.light {
+  background: var(--mint-strong);
+}
+
+.toggle-circle {
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  transition: 0.3s;
+}
+
+.toggle.light .toggle-circle {
+  transform: translateX(24px);
+}
+
+/* FAQ */
+.faq-item {
+  margin-top: 15px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.faq-question {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.faq-answer {
+  margin-top: 5px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
