@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import "./Intro.css";
-import logo from "/src/assets/syncspace-logo.png"; // adjust path
+import logo from "/src/assets/syncspace-logo.png";
 
-export default function Intro({ onComplete }) {
+export default function Intro({ onNavigate }) {
   const canvasRef = useRef(null);
   const [text, setText] = useState("");
 
-  // Typing effect
   useEffect(() => {
     const fullText = "SYNCSPACE";
     let index = 0;
+    setText("");
 
     const interval = setInterval(() => {
-      setText((prev) => prev + fullText.charAt(index));
+      setText(fullText.substring(0, index + 1));
       index++;
 
       if (index >= fullText.length) clearInterval(interval);
@@ -21,7 +21,6 @@ export default function Intro({ onComplete }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Particle animation
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -135,12 +134,20 @@ export default function Intro({ onComplete }) {
 
         <img src={logo} alt="syncspace" />
 
-        <button
-          id="button"
-          onClick={onComplete}
-        >
-          GO TO DASHBOARD
-        </button>
+        <div className="intro-buttons">
+          <button
+            className="intro-btn"
+            onClick={() => onNavigate('login')}
+          >
+            LOG IN
+          </button>
+          <button
+            className="intro-btn outline"
+            onClick={() => onNavigate('signup')}
+          >
+            SIGN UP
+          </button>
+        </div>
       </div>
 
       <canvas ref={canvasRef} id="particleCanvas"></canvas>

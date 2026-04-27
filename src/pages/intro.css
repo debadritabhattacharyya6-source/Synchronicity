@@ -77,22 +77,37 @@ img {
     }
 }
 
-#button{
-    color: var( --evergreen);
+.intro-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+    z-index: 1;
+}
+
+.intro-btn {
+    color: var(--evergreen);
     font-family: "Cinzel", serif;
     background-color: #b6e4c5;
     font-size: large;
     font-weight: 450;
-    z-index:1;
-    width:175px;
-    height:50px;
+    width: 200px;
+    height: 50px;
     border-radius: 20px;
-    border-color: #b6e4c5;
-    box-shadow: 
-        0 0 50px rgba(0, 255, 0, 0.5);
-        animation: float 4s ease-in-out infinite;
+    border: 2px solid #b6e4c5;
+    box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+    animation: float 4s ease-in-out infinite;
+    transition: all 0.3s ease;
 }
 
-#button:hover{
-    cursor:pointer;
+.intro-btn.outline {
+    background-color: transparent;
+    color: #b6e4c5;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.intro-btn:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+    box-shadow: 0 0 60px rgba(0, 255, 0, 0.7);
 }

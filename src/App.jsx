@@ -11,11 +11,13 @@ import Dashboard from "./pages/Dashboard";
 import "./pages/global.css";
 import "./App.css";
 import Navbar from "./components/Navbar";
+import Auth from "./pages/Auth";
 
 
 function App() {
   const [theme, setTheme] = useState("dark");
-  const [showIntro, setShowIntro] = useState(true);
+  const [currentScreen, setCurrentScreen] = useState("intro"); // 'intro', 'auth', 'app'
+  const [authMode, setAuthMode] = useState("login"); // 'login' or 'signup'
 
   // Theme apply
   useEffect(() => {
@@ -34,18 +36,16 @@ function App() {
     setTheme(saved === "light" ? "light" : "dark");
   }, []);
 
-  // 🎬 Intro auto-hide after 3s (you can change this)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowIntro(false);
-    }, 3000);
+  // 👉 SHOW INTRO OR AUTH FIRST
+  if (currentScreen === "intro") {
+    return <Intro onNavigate={(mode) => {
+      setAuthMode(mode);
+      setCurrentScreen("auth");
+    }} />;
+  }
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  // 👉 SHOW INTRO FIRST
-  if (showIntro) {
-    return <Intro onComplete={() => setShowIntro(false)} />;
+  if (currentScreen === "auth") {
+    return <Auth mode={authMode} setMode={setAuthMode} onComplete={() => setCurrentScreen("app")} />;
   }
 
   // 👉 THEN SHOW MAIN APP
