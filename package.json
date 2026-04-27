@@ -1,15 +1,29 @@
 {
-  "name": "my-app",
+  "name": "synchronicity-2",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "main": "eslint.config.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/debadritabhattacharyya6-source/Synchronicity.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/debadritabhattacharyya6-source/Synchronicity/issues"
+  },
+  "homepage": "https://github.com/debadritabhattacharyya6-source/Synchronicity#readme",
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "lucide-react": "^1.11.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
