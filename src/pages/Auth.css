@@ -101,6 +101,14 @@
   font-size: 14px;
 }
 
+.auth-or {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  font-size: 20px;
+  font-family: "Cinzel", serif;
+}
+
 .auth-toggle-link {
   color: var(--mint);
   cursor: pointer;
@@ -111,4 +119,30 @@
 .auth-toggle-link:hover {
   color: var(--frosted-mint);
   text-decoration: underline;
+}
+
+.logo-img-google{
+  height : 30px;
+  width : 30px;
+  object-fit: contain;
+  display :block;
+  position: relative;
+  border : none;
+}
+
+.auth-google{
+  height : 50px;
+  width : 250px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: transparent;
+  color : var(--text-secondary);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.auth-google:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
 }
