@@ -2,17 +2,30 @@ import { useState } from "react";
 import "./Auth.css";
 import logo from "/src/assets/syncspace-logo.png"; // adjust path
 import { auth, googleProvider } from "/src/assets/firebase"
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { FcGoogle } from "react-icons/fc";
+import { MdErrorOutline } from "react-icons/md";
 
 export default function Auth({ mode, setMode, onComplete }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const signUp = async () => {
+  const [error, setError] = useState(false);
+  const signUpWithEmail = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err) {
       console.error(err);
+    }
+  };
+  const signInWithEmail = async () => {
+    try{
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
+    }
+    catch(err){
+      console.log(err);
+      setError(true);
+      return false;
     }
   };
   const signUpWithGoogle = async () => {
@@ -23,19 +36,27 @@ export default function Auth({ mode, setMode, onComplete }) {
     }
     onComplete();
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(false);
     if (mode === "signup") {
-      signUp();
+      await signUpWithEmail();
     }
     else if (mode === "login") {
-
+      const success = await signInWithEmail();
+      if(!success){
+        setPassword("");
+        return;
+      };
     }
     onComplete();
   };
 
   const toggleMode = () => {
     setMode(mode === "login" ? "signup" : "login");
+    setError(false);
+    setEmail("");
+    setPassword("");
   };
 
   return (
@@ -67,6 +88,7 @@ export default function Auth({ mode, setMode, onComplete }) {
               placeholder="Enter your password"
             />
           </div>
+          <label htmlFor="error" className="auth-error">{error === false ? "" : <MdErrorOutline />}{error === false ? "" : " Incorrect email or password"}</label>
           <button type="submit" className="auth-submit">
             {mode === "login" ? "LOG IN" : "SIGN UP"}
           </button>
