@@ -1,0 +1,80 @@
+
+:root{
+  /* BRAND (keep these) */
+  --mint-strong: #52b788;
+  --mint: #74c69d;
+  --celadon: #b7e4c7;
+  --frosted-mint: #d8f3dc;
+
+  /* STRUCTURE (this is what you're missing) */
+  --bg-base: #081c15;       /* page base */
+  --bg-surface:  linear-gradient(
+    180deg,
+    #04241c 0%,
+    #022319 60%,
+    #01110b 100%  ) ; /* analytics container */
+  --bg-sidebar: #061812;    /* sidebar (darkest anchor) */
+  --bg-card: rgba(8, 28, 21, 0.65);
+
+  /* NEUTRAL TEXT (not green-tinted) */
+  --text-primary: #e6f4ea;
+  --text-secondary: #9fb7a7;
+
+  /* BORDERS / DIVIDERS */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(183, 228, 199, 0.12);
+
+
+   --chart-grid: #1b4332;
+  --chart-axis: #b7e4c7;
+  --chart-bar: #74c69d;
+  --chart-tooltip-bg: #081c15;
+
+  --deadline-pill:#ff6b6b;
+}
+
+[data-theme="light"] {
+  /* BASE (very subtle tint, not green wall) */
+  --bg-base: #e6f4ea;
+
+  /* SURFACE (main content area) */
+  --bg-surface: linear-gradient(
+    180deg,
+    #d3f8d9 0%,
+    #c1f9d7 100%
+  );
+
+  /* SIDEBAR (slightly tinted, but still distinct) */
+  --bg-sidebar: #e6f4ee;
+
+  /* CARDS (clean, readable) */
+  --bg-card: #f2fbf5;
+
+  /* TEXT */
+  --text-primary: #1e2d26;
+  --text-secondary: #5f7a6f;
+
+  /* ACCENTS */
+  --primary: #2f7d5f;
+  --accent: #4caf83;
+
+  /* BORDERS */
+  --border-subtle: rgba(0,0,0,0.05);
+  --border-strong: rgba(0,0,0,0.08);
+
+  /* CHARTS */
+  --chart-grid: #d8eee5;
+  --chart-axis: #5f7a6f;
+  --chart-bar: #2f7d5f;
+  --chart-tooltip-bg: #ffffff;
+
+  /* KEEP BRAND BUT CONTROL IT */
+  --frosted-mint: #4fb98e;
+
+  /* DEADLINES */
+  --deadline-pill: #d64545;
+}
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+}

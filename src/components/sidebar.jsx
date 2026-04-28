@@ -1,6 +1,9 @@
 import { NavLink } from "react-router-dom";
 import "./sidebar.css";
-import logo from "../assets/logo.jpeg";
+
+import logoDark from "../assets/logo.jpeg";
+import logoLight from "../assets/logo-light.jpeg";
+
 import {
   LayoutDashboard,
   Calendar,
@@ -10,11 +13,14 @@ import {
   Settings
 } from "lucide-react";
 
-export default function Sidebar() {
+
+export default function Sidebar({theme}) {
+  const logo = theme === "light" ? logoLight : logoDark;
+
   return (
     <div className="sidebar">
       <div className="logo">
-  <img src={logo} alt="logo" className="logo-img" />
+  <img key={theme} src={logo} alt="logo" className="logo-img" />
 </div>
 
       <nav>
