@@ -34,11 +34,11 @@
 /* LIGHT THEME override */
 [data-theme="light"] {
   --bg-base: #d8f3dc;
-   --bg-surface:  linear-gradient(
+   --bg-surface: linear-gradient(
     180deg,
-    #04241c 0%,
-    #022319 60%,
-    #01110b 100%  ) ;
+    #d3f8d9 0%,
+    #c1f9d7 100%
+  );
   --bg-sidebar: #e6f4ee;
   --bg-card: #ffffff;
 
