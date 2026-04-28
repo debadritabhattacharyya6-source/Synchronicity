@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import "./sidebar.css";
 
 import logoDark from "../assets/logo.jpeg";
-import logoLight from "../assets/logo-light.jpeg";
+import logoLight from "../assets/ss.png";
 
 import {
   LayoutDashboard,
@@ -16,7 +16,7 @@ import {
 
 export default function Sidebar({theme}) {
   const logo = theme === "light" ? logoLight : logoDark;
-
+  //const logo = logoLight;
   return (
     <div className="sidebar">
       <div className="logo">

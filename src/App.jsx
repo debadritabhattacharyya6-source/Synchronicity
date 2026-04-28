@@ -51,7 +51,7 @@ function App() {
   // 👉 THEN SHOW MAIN APP
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar />
+      <Sidebar theme={theme} />
 
       <div style={{ flex: 1, padding: "0 0 20px" }}>
         <Navbar/>
