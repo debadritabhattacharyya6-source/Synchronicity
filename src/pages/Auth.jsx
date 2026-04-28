@@ -34,13 +34,14 @@ export default function Auth({ mode, setMode, onComplete }) {
     } catch (err) {
       console.error(err);
     }
-    onComplete();
+    onComplete(mode === "signup");
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(false);
     if (mode === "signup") {
       await signUpWithEmail();
+      onComplete(true);
     }
     else if (mode === "login") {
       const success = await signInWithEmail();
@@ -48,8 +49,8 @@ export default function Auth({ mode, setMode, onComplete }) {
         setPassword("");
         return;
       };
+      onComplete(false);
     }
-    onComplete();
   };
 
   const toggleMode = () => {

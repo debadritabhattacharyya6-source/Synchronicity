@@ -12,7 +12,7 @@ import "./pages/global.css";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Auth from "./pages/Auth";
-
+import UserDetails from "./pages/UserDetails";
 
 function App() {
   const [theme, setTheme] = useState("dark");
@@ -45,7 +45,17 @@ function App() {
   }
 
   if (currentScreen === "auth") {
-    return <Auth mode={authMode} setMode={setAuthMode} onComplete={() => setCurrentScreen("app")} />;
+    return <Auth mode={authMode} setMode={setAuthMode} onComplete={(isSignup) => {
+      if (isSignup) {
+        setCurrentScreen("userdetails");
+      } else {
+        setCurrentScreen("app");
+      }
+    }} />;
+  }
+
+  if (currentScreen === "userdetails") {
+    return <UserDetails onComplete={() => setCurrentScreen("app")} />;
   }
 
   // 👉 THEN SHOW MAIN APP
