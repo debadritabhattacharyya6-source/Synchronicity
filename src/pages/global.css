@@ -20,6 +20,7 @@
   --text-primary: #e6f4ea;
   --text-secondary: #9fb7a7;
 
+  --card-h2: lightgreen;
   /* BORDERS / DIVIDERS */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-strong: rgba(183, 228, 199, 0.12);
@@ -44,6 +45,8 @@
 
   --text-primary: #1e2d26;
   --text-secondary: #143528;
+
+  --card-h2:rgb(1, 50, 1);
 
   --primary: #2f7d5f;
   --accent: #4caf83;

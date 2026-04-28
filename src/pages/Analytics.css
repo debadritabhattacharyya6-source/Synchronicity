@@ -23,8 +23,8 @@ body {
   /* gradient text */
   background: linear-gradient(
     90deg,
-    #d8f3dc,
-    #74c69d
+    var(--text-secondary),
+    var(--text-primary)
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -92,7 +92,7 @@ body {
 .card h2 {
   margin-bottom: 15px;
   font-size: 16px;
-  color: var(--text-primary);
+  color:var(--card-h2);
 }
 .analytics-grid {
   display: grid;
