@@ -1,7 +1,8 @@
 import { useState } from "react";
 import "./Auth.css";
 import logo from "/src/assets/syncspace-logo.png"; // adjust path
-import { auth, googleProvider } from "/src/assets/firebase"
+import { auth, googleProvider, db } from "/src/assets/firebase"
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { FcGoogle } from "react-icons/fc";
 import { MdErrorOutline } from "react-icons/md";
@@ -10,19 +11,35 @@ export default function Auth({ mode, setMode, onComplete }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+
+  const createUserDocument = async (userCredential) => {
+    try {
+      await setDoc(doc(db, "users", userCredential.user.uid), {}, { merge: true });
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    };
+  }
   const signUpWithEmail = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      createUserDocument(userCredential);
+      return true;
     } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        setError(true);
+      }
       console.error(err);
+      return false;
     }
   };
   const signInWithEmail = async () => {
-    try{
+    try {
       await signInWithEmailAndPassword(auth, email, password);
       return true;
     }
-    catch(err){
+    catch (err) {
       console.log(err);
       setError(true);
       return false;
@@ -30,7 +47,8 @@ export default function Auth({ mode, setMode, onComplete }) {
   };
   const signUpWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      createUserDocument(userCredential);
     } catch (err) {
       console.error(err);
     }
@@ -40,15 +58,19 @@ export default function Auth({ mode, setMode, onComplete }) {
     e.preventDefault();
     setError(false);
     if (mode === "signup") {
-      await signUpWithEmail();
+      const success = await signUpWithEmail();
+      if (!success) {
+        setPassword("");
+        return;
+      }
       onComplete(true);
     }
     else if (mode === "login") {
       const success = await signInWithEmail();
-      if(!success){
+      if (!success) {
         setPassword("");
         return;
-      };
+      }
       onComplete(false);
     }
   };
@@ -89,7 +111,7 @@ export default function Auth({ mode, setMode, onComplete }) {
               placeholder="Enter your password"
             />
           </div>
-          <label htmlFor="error" className="auth-error">{error === false ? "" : <MdErrorOutline />}{error === false ? "" : " Incorrect email or password"}</label>
+          <label htmlFor="error" className="auth-error">{error === false ? "" : <MdErrorOutline />}{(mode === "login" && error === true) ? " Incorrect email or password" : ""}{(mode === "signup" && error === true) ? " Email already in use" : ""}</label>
           <button type="submit" className="auth-submit">
             {mode === "login" ? "LOG IN" : "SIGN UP"}
           </button>

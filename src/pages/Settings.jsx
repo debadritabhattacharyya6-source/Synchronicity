@@ -54,7 +54,7 @@ export default function Settings({ theme, setTheme }) {
               <p className="subtext">Customize your interface</p>
 
               <div className="theme-row">
-                <span>Dark Mode</span>
+                <span>Light Mode</span>
 
                 <div
                   className={`toggle ${theme === "light" ? "light" : ""}`}

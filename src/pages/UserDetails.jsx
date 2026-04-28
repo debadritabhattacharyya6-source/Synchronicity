@@ -1,6 +1,10 @@
 import { useState } from "react";
 import "./Auth.css";
 import logo from "/src/assets/syncspace-logo.png";
+import { auth, db } from "/src/assets/firebase"
+import { doc, updateDoc } from "firebase/firestore";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function UserDetails({ onComplete }) {
   const [firstName, setFirstName] = useState("");
@@ -11,8 +15,34 @@ export default function UserDetails({ onComplete }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
+  const showError = () => toast.error("Something went wrong!");
+
+  const updateDetails = async () => {
+    try {
+      const userDoc = doc(db, "users", auth.currentUser.uid);
+      updateDoc(userDoc, {
+        firstName: firstName,
+        lastName: lastName,
+        middleName: middleName,
+        university: university,
+        branch: branch,
+        email: email,
+        phone: phone
+      });
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const success = await updateDetails();
+    if (!success) {
+      showError();
+      return;
+    }
     onComplete();
   };
 

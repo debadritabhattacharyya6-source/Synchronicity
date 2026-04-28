@@ -1,8 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Profile.css';
 import { Mail, Phone, MapPin, Briefcase, Camera } from 'lucide-react';
+import { auth, db } from "/src/assets/firebase"
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Profile() {
+  const [userData, setUserData] = useState(null);
+
+  const getUserdata = async () => {
+    try {
+      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        setUserData(userData);
+      }
+    }
+    catch (err) {
+      console.error(err);
+    }
+  }
+  useEffect(() => {
+    if(!auth.currentUser) return;
+    getUserdata();
+  })
+  if (!userData) return (<div>Loading profile...</div>)
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -15,7 +36,7 @@ export default function Profile() {
         <div className="profile-info-section">
           <div className="profile-avatar-wrapper">
             <div className="profile-avatar">
-              <span className="avatar-initials">PB</span>
+              <span className="avatar-initials">{userData.firstName.charAt(0)}{userData.lastName.charAt(0)}</span>
               <button className="edit-avatar-btn">
                 <Camera size={14} />
               </button>
@@ -24,7 +45,7 @@ export default function Profile() {
 
           <div className="profile-details">
             <div className="profile-name-role">
-              <h1>Prathama Biswas</h1>
+              <h1>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
               <p className="role-badge">Student</p>
             </div>
             <p className="profile-bio">
@@ -61,7 +82,7 @@ export default function Profile() {
           <div className="info-list">
             <div className="info-row">
               <Briefcase className="info-icon" size={18} />
-              <span>Student at Jadavpur University</span>
+              <span>Student at {userData.university}</span>
             </div>
             <div className="info-row">
               <MapPin className="info-icon" size={18} />
@@ -69,11 +90,11 @@ export default function Profile() {
             </div>
             <div className="info-row">
               <Mail className="info-icon" size={18} />
-              <span>prathama.6327@gmail.com</span>
+              <span>{userData.email}</span>
             </div>
             <div className="info-row">
               <Phone className="info-icon" size={18} />
-              <span>+91 1234567890</span>
+              <span>+91 {userData.phone}</span>
             </div>
           </div>
         </div>
