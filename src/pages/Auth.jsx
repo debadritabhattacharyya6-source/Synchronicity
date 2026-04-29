@@ -48,11 +48,18 @@ export default function Auth({ mode, setMode, onComplete }) {
   const signUpWithGoogle = async () => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
-      createUserDocument(userCredential);
+      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (docSnap.exists()) {
+        onComplete(false);
+        return;
+      }
+      else {
+        createUserDocument(userCredential);
+        onComplete(true);
+      }
     } catch (err) {
       console.error(err);
     }
-    onComplete(mode === "signup");
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
