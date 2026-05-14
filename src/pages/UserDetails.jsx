@@ -47,8 +47,17 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
     onComplete();
   };
 
-  return createPortal(
-    <div className="auth-page" style={{ height: "auto", minHeight: "100vh", padding: "40px 0" }}>
+  return createPortal((
+    <div className="auth-page" style={{ position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'black',
+        zIndex: 99999,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        padding:"40px 0" }}>
       <div className="auth-container" style={{ width: "650px", maxWidth: "95%", margin: "auto" }}>
         <img src={logo} alt="syncspace" className="auth-logo" />
         <h2 className="auth-title">Complete Your Profile</h2>
@@ -142,6 +151,6 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
           </button>
         </form>
       </div>
-    </div>
+    </div>)
   , document.getElementById('root-portal'));
 }
