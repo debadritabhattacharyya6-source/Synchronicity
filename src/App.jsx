@@ -1,7 +1,8 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from '/src/assets/firebase'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Intro from "./pages/Intro";
 import Sidebar from "./components/Sidebar";
@@ -20,7 +21,20 @@ function App() {
   const [theme, setTheme] = useState("dark");
   const [currentScreen, setCurrentScreen] = useState("intro"); // 'intro', 'auth', 'app'
   const [authMode, setAuthMode] = useState("login"); // 'login' or 'signup'
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const location = useLocation();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+      setCurrentScreen("app");
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Theme apply
   useEffect(() => {
     if (theme === "light") {
@@ -46,6 +60,14 @@ function App() {
       setCurrentScreen(location.state?.currentScreen);
     }
   }, [location]);
+
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: 'black', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#00ff88' }}>
+        <p>Loading Sync Space...</p>
+      </div>
+    );
+  }
 
   // 👉 SHOW INTRO OR AUTH FIRST
   if (currentScreen === "intro") {
