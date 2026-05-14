@@ -7,8 +7,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Header Section */
@@ -70,7 +77,8 @@
   height: 120px;
   border-radius: 50%;
   background: linear-gradient(135deg, #52b788, #74c69d);
-  border: 4px solid #081c15; /* Match app background */
+  border: 4px solid #081c15;
+  /* Match app background */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,7 +90,7 @@
   font-size: 42px;
   font-weight: 700;
   color: white;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .edit-avatar-btn {
@@ -171,7 +179,9 @@
   padding-top: 16px;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary,
+.btn-logout {
   padding: 10px 20px;
   border-radius: 12px;
   font-weight: 600;
@@ -199,10 +209,17 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-secondary:hover {
+.btn-logout {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgb(224, 57, 57);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover, .btn-logout:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
+
 
 /* Content Section */
 .profile-content {
@@ -217,7 +234,8 @@
   }
 }
 
-.info-card, .recent-activity-card {
+.info-card,
+.recent-activity-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(216, 243, 220, 0.1);
   border-radius: 20px;
@@ -225,7 +243,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.info-card h2, .recent-activity-card h2 {
+.info-card h2,
+.recent-activity-card h2 {
   font-size: 18px;
   margin: 0 0 20px 0;
   color: white;
@@ -309,7 +328,8 @@
 [data-theme="light"] .info-card h2,
 [data-theme="light"] .recent-activity-card h2,
 [data-theme="light"] .activity-details strong {
-  color: #143528; /* Evergreen color */
+  color: #143528;
+  /* Evergreen color */
 }
 
 [data-theme="light"] .profile-name-role h1 {
@@ -321,7 +341,8 @@
 [data-theme="light"] .profile-bio,
 [data-theme="light"] .info-row,
 [data-theme="light"] .activity-details p {
-  color: #2f7d5f; /* Lighter evergreen */
+  color: #2f7d5f;
+  /* Lighter evergreen */
 }
 
 [data-theme="light"] .btn-secondary {
@@ -333,7 +354,7 @@
   background: rgba(20, 53, 40, 0.05);
 }
 
-[data-theme="light"] .info-card, 
+[data-theme="light"] .info-card,
 [data-theme="light"] .recent-activity-card,
 [data-theme="light"] .profile-header {
   background: rgba(255, 255, 255, 0.6);

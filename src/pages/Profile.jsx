@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Profile.css';
+import Modal from '/src/components/Modal';
+import UserDetails from "/src/pages/UserDetails";
 import { Mail, Phone, MapPin, Briefcase, Camera } from 'lucide-react';
-import { auth, db } from "/src/assets/firebase"
+import { auth, db } from "/src/assets/firebase";
+import { signOut } from 'firebase/auth';
 import { doc, getDoc } from "firebase/firestore";
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+
+  const navigate = useNavigate();
+
+  const editProfile = () => {
+    setShowEditProfile(true);
+  }
 
   const getUserdata = async () => {
     try {
@@ -19,10 +31,27 @@ export default function Profile() {
       console.error(err);
     }
   }
+
+
+  const logout = async () => {
+    try {
+      setShowModal(false);
+      signOut(auth);
+      navigate('/', { state: { currentScreen: "intro" } });
+    }
+    catch (err) {
+      console.error(err);
+    }
+  }
+
+  const confirmLogout = () => {
+    setShowModal(true);
+  }
   useEffect(() => {
-    if(!auth.currentUser) return;
+    if (!auth.currentUser) return;
     getUserdata();
   })
+
   if (!userData) return (<div>Loading profile...</div>)
   return (
     <div className="profile-container">
@@ -70,8 +99,29 @@ export default function Profile() {
           </div>
 
           <div className="profile-actions">
-            <button className="btn-primary">Edit Profile</button>
+            <button className="btn-primary" onClick={editProfile}>Edit Profile</button>
+            {showEditProfile && 
+            <UserDetails
+              onComplete={() => { 
+                setShowEditProfile(false);
+              }}
+              first_name={userData.firstName}
+              last_name={userData.lastName}
+              middle_name={userData.middleName}
+              branch_name={userData.branch}
+              university_name={userData.university}
+              mail={userData.email}
+              ph={userData.phone} />}
             <button className="btn-secondary">Share</button>
+            <button className="btn-logout" onClick={confirmLogout}>Logout</button>
+            <Modal
+              modalVisible={showModal}
+              title="Are you sure?"
+              onConfirm={logout}
+              onCancel={() => setShowModal(false)}
+              confirmText="Logout">
+              <p>You will be redirected to the login page</p>
+            </Modal>
           </div>
         </div>
       </div>
@@ -127,5 +177,6 @@ export default function Profile() {
         </div>
       </div>
     </div>
+
   );
 }

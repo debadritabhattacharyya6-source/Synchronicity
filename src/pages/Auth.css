@@ -121,23 +121,23 @@
   text-decoration: underline;
 }
 
-.logo-img-google{
-  height : 30px;
-  width : 30px;
+.logo-img-google {
+  height: 30px;
+  width: 30px;
   object-fit: contain;
-  display :block;
+  display: block;
   position: relative;
-  border : none;
+  border: none;
 }
 
-.auth-google{
-  height : 50px;
-  width : 250px;
+.auth-google {
+  height: 50px;
+  width: 250px;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
   background-color: transparent;
-  color : var(--text-secondary);
+  color: var(--text-secondary);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
 }
@@ -147,7 +147,7 @@
   box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
 }
 
-.auth-error{
+.auth-error {
   color: crimson;
   font-family: serif;
   text-align: left;

@@ -1,19 +1,20 @@
 import { useState } from "react";
 import "./Auth.css";
 import logo from "/src/assets/syncspace-logo.png";
+import { createPortal } from 'react-dom';
 import { auth, db } from "/src/assets/firebase"
 import { doc, updateDoc } from "firebase/firestore";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default function UserDetails({ onComplete }) {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [university, setUniversity] = useState("");
-  const [branch, setBranch] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+export default function UserDetails({ onComplete, first_name = "", last_name = "", middle_name = "", university_name = "", branch_name = "", mail = "", ph = "" }) {
+  const [firstName, setFirstName] = useState(first_name);
+  const [lastName, setLastName] = useState(last_name);
+  const [middleName, setMiddleName] = useState(middle_name);
+  const [university, setUniversity] = useState(university_name);
+  const [branch, setBranch] = useState(branch_name);
+  const [email, setEmail] = useState(mail);
+  const [phone, setPhone] = useState(ph);
 
   const showError = () => toast.error("Something went wrong!");
 
@@ -46,7 +47,7 @@ export default function UserDetails({ onComplete }) {
     onComplete();
   };
 
-  return (
+  return createPortal(
     <div className="auth-page" style={{ height: "auto", minHeight: "100vh", padding: "40px 0" }}>
       <div className="auth-container" style={{ width: "650px", maxWidth: "95%", margin: "auto" }}>
         <img src={logo} alt="syncspace" className="auth-logo" />
@@ -142,5 +143,5 @@ export default function UserDetails({ onComplete }) {
         </form>
       </div>
     </div>
-  );
+  , document.getElementById('root-portal'));
 }

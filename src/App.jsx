@@ -1,5 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Intro from "./pages/Intro";
@@ -19,7 +20,7 @@ function App() {
   const [theme, setTheme] = useState("dark");
   const [currentScreen, setCurrentScreen] = useState("intro"); // 'intro', 'auth', 'app'
   const [authMode, setAuthMode] = useState("login"); // 'login' or 'signup'
-
+  const location = useLocation();
   // Theme apply
   useEffect(() => {
     if (theme === "light") {
@@ -36,6 +37,15 @@ function App() {
     const saved = localStorage.getItem("theme");
     setTheme(saved === "light" ? "light" : "dark");
   }, []);
+
+  useEffect(() => {
+    if (location.state?.currentScreen === "intro") {
+      setCurrentScreen(location.state?.currentScreen);
+    }
+    else if(location.state?.currentScreen === 'userdetails'){
+      setCurrentScreen(location.state?.currentScreen);
+    }
+  }, [location]);
 
   // 👉 SHOW INTRO OR AUTH FIRST
   if (currentScreen === "intro") {
@@ -56,7 +66,9 @@ function App() {
   }
 
   if (currentScreen === "userdetails") {
-    return <UserDetails onComplete={() => setCurrentScreen("app")} />;
+    return <UserDetails onComplete={() => {
+      setCurrentScreen("app");
+    }} />;
   }
 
   // 👉 THEN SHOW MAIN APP
@@ -65,8 +77,8 @@ function App() {
       <Sidebar theme={theme} />
 
       <div style={{ flex: 1, padding: "0 0 20px" }}>
-        <Navbar/>
-        
+        <Navbar />
+
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<Calendar />} />

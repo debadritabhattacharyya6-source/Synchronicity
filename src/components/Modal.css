@@ -1,0 +1,94 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-box {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    height: 30%;
+    background-color: #061812;
+    justify-content: center;
+    /* align-items: center; */
+    animation: pop-up 0.1s ease-out;
+    border-radius: 30px;
+}
+
+@keyframes pop-up {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-title {
+    font-family: "Cinzel", serif;
+    padding-bottom: 20px;
+    text-align: left;
+    padding-left: 30px;
+    margin-left: 0;
+    color: #b7e4c7;
+}
+
+.modal-child {
+    margin-left: 0;
+    padding-left: 30px;
+    padding-bottom: 20px;
+}
+
+.modal-buttons{
+    display: flex;
+    align-items: center;
+    padding-right: 30px;
+    gap: 20px;
+}
+
+.modal-cancel,
+.modal-logout {
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-cancel {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.modal-logout {
+    background: rgba(255, 0, 0, 0.5);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-logout:hover{
+    transform : translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+    color:red;
+    box-shadow : 0 4px 4px rgba(255, 0, 0, 0.5);
+}
