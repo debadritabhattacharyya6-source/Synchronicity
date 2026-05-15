@@ -16,6 +16,7 @@ import Navbar from "./components/Navbar";
 import Auth from "./pages/Auth";
 import UserDetails from "./pages/UserDetails";
 import Calendar from "./pages/Calendar";
+import Deadlines from "./pages/Deadlines";
 
 function App() {
   const [theme, setTheme] = useState("dark");
@@ -104,7 +105,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/deadlines" element={<h1>Deadlines</h1>} />
+          <Route path="/deadlines" element={<Deadlines />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/collaboration" element={<h1>Collaboration</h1>} />
           <Route path="/profile" element={<Profile />} />
