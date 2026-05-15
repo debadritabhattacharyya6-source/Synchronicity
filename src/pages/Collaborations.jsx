@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./Collaborations.css";
 
 export default function CollaborationPage() {
-  const groups = [
+  const [groups, setGroups] = useState([
     {
       title: "DBMS Project",
       members: 5,
@@ -21,8 +21,15 @@ export default function CollaborationPage() {
       deadline: "5 days left",
       progress: 84,
     },
-  ];
+  ]);
+const [showModal, setShowModal]= useState(false);
 
+const[newTeam, setNewTeam]=useState({
+    title:"",
+    members: "",
+    deadline:"",
+    progress:"",
+})
 const tasks = {
   todo: [
     {
@@ -95,6 +102,32 @@ const getProgressColor = (progress) => {
   };
 };
 
+const handleCreateTeam=()=>{
+    if(
+        !newTeam.title||
+        !newTeam.members||
+        !newTeam.deadline||
+        !newTeam.progress
+    ){return;}
+
+    const createdTeam={
+        title: newTeam.title,
+        members: Number(newTeam.members),
+        deadline: newTeam.deadline,
+        progress: Number(newTeam.progress),
+    }
+
+    setGroups([...groups, createdTeam]);
+    setNewTeam({
+    title: "",
+    members: "",
+    deadline: "",
+    progress: "",
+  });
+
+  setShowModal(false);
+};
+
   return (
     <div className="collab-page">
 
@@ -127,7 +160,8 @@ const getProgressColor = (progress) => {
           </p>
 
           <div className="hero-buttons">
-            <button className="primary-btn">
+            <button className="primary-btn"
+            onClick ={()=> setShowModal(true)}>
               Create Team
             </button>
 
@@ -139,9 +173,9 @@ const getProgressColor = (progress) => {
 
       <div className="hero-right">
 
-    <div className="floating-card">
+        <div className="floating-card">
 
-      <h3>Team Progress</h3>
+          <h3>Team Progress</h3>
 
       <div
         className="progress-circle"
@@ -174,260 +208,256 @@ const getProgressColor = (progress) => {
   </div>
       </section>
 
-
-
-     {/* ACTIVE STUDY GROUPS */}
-
-<section className="section">
-  <div className="section-header">
-    <h2>Active Study Groups</h2>
-  </div>
-
-  <div className="group-grid">
-
-    {groups.map((group, index) => {
-
-      const status =
-        getProgressColor(group.progress);
-
-      return (
-
-        <div
-          className="group-card"
-          key={index}
-        >
-
-          <div className="group-top">
-
-            <h3>{group.title}</h3>
-
-            <span
-              style={{
-                color: status.color,
-                
-              }}
-            >
-              {group.progress}%
-            </span>
-
-          </div>
-
-          <p>
-            {group.members} Members • {group.deadline}
-          </p>
-
-          <div className="progress-bar">
-
-            <div
-              className="progress-fill"
-              style={{
-                width: `${group.progress}%`,
-                background: status.gradient,
-                boxShadow:
-                  `0 0 18px ${status.border}`,
-              }}
-            />
-
-          </div>
-
-          <small>
-            Last updated 12 mins ago
-          </small>
-
-        </div>
-      );
-    })}
-
-  </div>
-</section>
-
-{/* TASK BOARD */}
-
-<section className="section">
-
-  <div className="section-header">
-    <h2>Task Board</h2>
-  </div>
-
-  <div className="task-board">
-
-    {/* TODO */}
-
-    <div className="task-column">
-
-      <h3>To Do</h3>
-
-      {tasks.todo.map((task, i) => (
-
-        <div
-          className="task-card"
-          key={i}
-        >
-
-          <div className="task-title">
-            {task.title}
-          </div>
-
-          <div className="task-hover">
-
-            <p>
-              <strong>Assigned:</strong>
-              {" "}
-              {task.assigned}
-            </p>
-
-            <p>
-              <strong>Due:</strong>
-              {" "}
-              {task.due}
-            </p>
-
-            <p>
-              <strong>Priority:</strong>
-              {" "}
-              {task.priority}
-            </p>
-
-          </div>
-
+        <section className="section">
+        <div className="section-header">
+            <h2>Active Study Groups</h2>
         </div>
 
-      ))}
+        <div className="group-grid">
 
-    </div>
+            {groups.map((group, index) => {
 
-    {/* IN PROGRESS */}
+            const status =
+                getProgressColor(group.progress);
 
-    <div className="task-column">
+            return (
 
-      <h3>In Progress</h3>
+                <div
+                className="group-card"
+                key={index}
+                >
 
-      {tasks.progress.map((task, i) => (
+                <div className="group-top">
 
-        <div
-          className="task-card"
-          key={i}
-        >
+                    <h3>{group.title}</h3>
 
-          <div className="task-title">
-            {task.title}
-          </div>
+                    <span
+                    style={{
+                        color: status.color,
+                        
+                    }}
+                    >
+                    {group.progress}%
+                    </span>
 
-          <div className="task-hover">
+                </div>
 
-            <p>
-              <strong>Assigned:</strong>
-              {" "}
-              {task.assigned}
-            </p>
+                <p>
+                    {group.members} Members • {group.deadline}
+                </p>
 
-            <p>
-              <strong>Due:</strong>
-              {" "}
-              {task.due}
-            </p>
+                <div className="progress-bar">
 
-            <p>
-              <strong>Priority:</strong>
-              {" "}
-              {task.priority}
-            </p>
+                    <div
+                    className="progress-fill"
+                    style={{
+                        width: `${group.progress}%`,
+                        background: status.gradient,
+                        boxShadow:
+                        `0 0 18px ${status.border}`,
+                    }}
+                    />
 
-          </div>
+                </div>
+
+                <small>
+                    Last updated 12 mins ago
+                </small>
+
+                </div>
+            );
+            })}
+
+        </div>
+        </section>
+
+
+
+        <section className="section">
+
+        <div className="section-header">
+            <h2>Task Board</h2>
+        </div>
+
+        <div className="task-board">
+
+
+
+            <div className="task-column">
+
+            <h3>To Do</h3>
+
+            {tasks.todo.map((task, i) => (
+
+                <div
+                className="task-card"
+                key={i}
+                >
+
+                <div className="task-title">
+                    {task.title}
+                </div>
+
+                <div className="task-hover">
+
+                    <p>
+                    <strong>Assigned:</strong>
+                    {" "}
+                    {task.assigned}
+                    </p>
+
+                    <p>
+                    <strong>Due:</strong>
+                    {" "}
+                    {task.due}
+                    </p>
+
+                    <p>
+                    <strong>Priority:</strong>
+                    {" "}
+                    {task.priority}
+                    </p>
+
+                </div>
+
+                </div>
+
+            ))}
+
+            </div>
+
+            {/* IN PROGRESS */}
+
+            <div className="task-column">
+
+            <h3>In Progress</h3>
+
+            {tasks.progress.map((task, i) => (
+
+                <div
+                className="task-card"
+                key={i}
+                >
+
+                <div className="task-title">
+                    {task.title}
+                </div>
+
+                <div className="task-hover">
+
+                    <p>
+                    <strong>Assigned:</strong>
+                    {" "}
+                    {task.assigned}
+                    </p>
+
+                    <p>
+                    <strong>Due:</strong>
+                    {" "}
+                    {task.due}
+                    </p>
+
+                    <p>
+                    <strong>Priority:</strong>
+                    {" "}
+                    {task.priority}
+                    </p>
+
+                </div>
+
+                </div>
+
+            ))}
+
+            </div>
+
+            {/* REVIEW */}
+
+            <div className="task-column">
+
+            <h3>Review</h3>
+
+            {tasks.review.map((task, i) => (
+
+                <div
+                className="task-card"
+                key={i}
+                >
+
+                <div className="task-title">
+                    {task.title}
+                </div>
+
+                <div className="task-hover">
+
+                    <p>
+                    <strong>Assigned:</strong>
+                    {" "}
+                    {task.assigned}
+                    </p>
+
+                    <p>
+                    <strong>Due:</strong>
+                    {" "}
+                    {task.due}
+                    </p>
+
+                    <p>
+                    <strong>Priority:</strong>
+                    {" "}
+                    {task.priority}
+                    </p>
+
+                </div>
+
+                </div>
+
+            ))}
+
+            </div>
+
+            {/* COMPLETED */}
+
+            <div className="task-column">
+
+            <h3>Completed</h3>
+
+            {tasks.completed.map((task, i) => (
+
+                <div
+                className="task-card completed"
+                key={i}
+                >
+
+                <div className="task-title">
+                    {task.title}
+                </div>
+
+                <div className="task-hover">
+
+                    <p>
+                    <strong>Assigned:</strong>
+                    {" "}
+                    {task.assigned}
+                    </p>
+
+                    <p>
+                    <strong>Status:</strong>
+                    {" "}
+                    Finished
+                    </p>
+
+                </div>
+
+                </div>
+
+            ))}
+
+            </div>
 
         </div>
 
-      ))}
-
-    </div>
-
-    {/* REVIEW */}
-
-    <div className="task-column">
-
-      <h3>Review</h3>
-
-      {tasks.review.map((task, i) => (
-
-        <div
-          className="task-card"
-          key={i}
-        >
-
-          <div className="task-title">
-            {task.title}
-          </div>
-
-          <div className="task-hover">
-
-            <p>
-              <strong>Assigned:</strong>
-              {" "}
-              {task.assigned}
-            </p>
-
-            <p>
-              <strong>Due:</strong>
-              {" "}
-              {task.due}
-            </p>
-
-            <p>
-              <strong>Priority:</strong>
-              {" "}
-              {task.priority}
-            </p>
-
-          </div>
-
-        </div>
-
-      ))}
-
-    </div>
-
-    {/* COMPLETED */}
-
-    <div className="task-column">
-
-      <h3>Completed</h3>
-
-      {tasks.completed.map((task, i) => (
-
-        <div
-          className="task-card completed"
-          key={i}
-        >
-
-          <div className="task-title">
-            {task.title}
-          </div>
-
-          <div className="task-hover">
-
-            <p>
-              <strong>Assigned:</strong>
-              {" "}
-              {task.assigned}
-            </p>
-
-            <p>
-              <strong>Status:</strong>
-              {" "}
-              Finished
-            </p>
-
-          </div>
-
-        </div>
-
-      ))}
-
-    </div>
-
-  </div>
-
-</section>
+        </section>
       <section className="section">
         <div className="section-header">
           <h2>Upcoming Study Sessions</h2>
@@ -457,7 +487,86 @@ const getProgressColor = (progress) => {
 
         </div>
       </section>
+      {/* CREATE TEAM MODAL */}
+
+{showModal && (
+
+  <div className="modal-overlay">
+
+    <div className="team-modal">
+
+      <h2>Create New Team</h2>
+
+      <input
+        type="text"
+        placeholder="Team Name"
+        value={newTeam.title}
+        onChange={(e) =>
+          setNewTeam({
+            ...newTeam,
+            title: e.target.value,
+          })
+        }
+      />
+
+      <input
+        type="number"
+        placeholder="Members"
+        value={newTeam.members}
+        onChange={(e) =>
+          setNewTeam({
+            ...newTeam,
+            members: e.target.value,
+          })
+        }
+      />
+
+      <input
+        type="text"
+        placeholder="Deadline"
+        value={newTeam.deadline}
+        onChange={(e) =>
+          setNewTeam({
+            ...newTeam,
+            deadline: e.target.value,
+          })
+        }
+      />
+
+      <input
+        type="number"
+        placeholder="Progress %"
+        value={newTeam.progress}
+        onChange={(e) =>
+          setNewTeam({
+            ...newTeam,
+            progress: e.target.value,
+          })
+        }
+      />
+
+      <div className="modal-buttons">
+
+        <button
+          className="cancel-btn"
+          onClick={() => setShowModal(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="create-btn"
+          onClick={handleCreateTeam}
+        >
+          Create
+        </button>
+
+      </div>
 
     </div>
-  );
-}
+
+  </div>
+)}
+
+    </div>
+  )};
