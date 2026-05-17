@@ -10,6 +10,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Collaborations from "./pages/Collaborations";
 import "./pages/global.css";
 import "./App.css";
 import Navbar from "./components/Navbar";
@@ -107,7 +108,7 @@ function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/deadlines" element={<Deadlines theme={theme}/>} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/collaboration" element={<h1>Collaboration</h1>} />
+          <Route path="/collaboration" element={<Collaborations/>} />
           <Route path="/profile" element={<Profile />} />
           <Route
             path="/settings"
