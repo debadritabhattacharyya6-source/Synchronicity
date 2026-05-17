@@ -28,7 +28,8 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
         university: university,
         branch: branch,
         email: email,
-        phone: phone
+        phone: phone,
+        deadlines: []
       });
       return true;
     } catch (err) {

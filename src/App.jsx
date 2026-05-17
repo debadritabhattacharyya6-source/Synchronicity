@@ -105,7 +105,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/deadlines" element={<Deadlines />} />
+          <Route path="/deadlines" element={<Deadlines theme={theme}/>} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/collaboration" element={<h1>Collaboration</h1>} />
           <Route path="/profile" element={<Profile />} />

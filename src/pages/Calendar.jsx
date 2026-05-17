@@ -31,14 +31,14 @@ export default function Calendar() {
   const getMonthDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
+
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
-    
+
     const daysInPrevMonth = getDaysInMonth(year, month - 1);
-    
+
     const days = [];
-    
+
     // Previous month filler days
     for (let i = firstDay - 1; i >= 0; i--) {
       days.push({
@@ -46,7 +46,7 @@ export default function Calendar() {
         isCurrentMonth: false
       });
     }
-    
+
     // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
       days.push({
@@ -54,7 +54,7 @@ export default function Calendar() {
         isCurrentMonth: true
       });
     }
-    
+
     // Next month filler days (to make up rows of 7)
     const remainingCells = 42 - days.length; // 6 rows * 7 days
     for (let i = 1; i <= remainingCells; i++) {
@@ -63,7 +63,7 @@ export default function Calendar() {
         isCurrentMonth: false
       });
     }
-    
+
     return days;
   };
 
@@ -72,9 +72,9 @@ export default function Calendar() {
     const month = currentDate.getMonth();
     const date = currentDate.getDate();
     const dayOfWeek = currentDate.getDay(); // 0 (Sun) to 6 (Sat)
-    
+
     const startOfWeek = new Date(year, month, date - dayOfWeek);
-    
+
     const days = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(startOfWeek);
@@ -89,15 +89,15 @@ export default function Calendar() {
 
   const isToday = (date) => {
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   };
 
   // Mock events for UI demonstration
   const getMockEvents = (date) => {
     const day = date.getDate();
     const events = [];
-    
+
     if (day === 5 || day === 15) {
       events.push({ title: "Project Meeting", type: "event-blue" });
     }
@@ -107,7 +107,7 @@ export default function Calendar() {
     if (day === 22) {
       events.push({ title: "Team Sync", type: "event-green" });
     }
-    
+
     return events;
   };
 
@@ -120,8 +120,8 @@ export default function Calendar() {
     return visibleDays.map((dayObj, index) => {
       const events = getMockEvents(dayObj.date);
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`calendar-cell ${!dayObj.isCurrentMonth ? 'different-month' : ''} ${isToday(dayObj.date) ? 'today' : ''}`}
         >
           <span className="cell-date">{dayObj.date.getDate()}</span>
@@ -144,7 +144,7 @@ export default function Calendar() {
       const date = currentDate.getDate();
       const start = new Date(year, month, date - currentDate.getDay());
       const end = new Date(year, month, date + (6 - currentDate.getDay()));
-      
+
       const startStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const endStr = end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
       return `${startStr} - ${endStr}`;
@@ -157,16 +157,16 @@ export default function Calendar() {
     <div className="calendar-page">
       <div className="calendar-header-top">
         <h1 className="calendar-title">Calendar</h1>
-        
+
         <div className="calendar-controls">
           <div className="view-toggle">
-            <button 
+            <button
               className={`view-btn ${viewMode === 'month' ? 'active' : ''}`}
               onClick={() => setViewMode('month')}
             >
               Month
             </button>
-            <button 
+            <button
               className={`view-btn ${viewMode === 'week' ? 'active' : ''}`}
               onClick={() => setViewMode('week')}
             >
@@ -192,7 +192,7 @@ export default function Calendar() {
             <div key={day} className="day-name">{day}</div>
           ))}
         </div>
-        
+
         <div className={`calendar-grid-body ${viewMode}-view`}>
           {renderCells()}
         </div>

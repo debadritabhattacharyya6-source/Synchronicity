@@ -32,7 +32,6 @@ export default function Profile() {
     }
   }
 
-
   const logout = async () => {
     try {
       setShowModal(false);
@@ -46,11 +45,12 @@ export default function Profile() {
 
   const confirmLogout = () => {
     setShowModal(true);
-  }
+  };
+
   useEffect(() => {
     if (!auth.currentUser) return;
     getUserdata();
-  })
+  });
 
   if (!userData) return (<div>Loading profile...</div>)
   return (

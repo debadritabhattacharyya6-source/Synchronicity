@@ -1,79 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, AlertCircle, FileText, CheckCircle, Search, Filter } from 'lucide-react';
+import NewDeadline from './NewDeadline';
+import Modal from '../components/Modal';
 import './Deadlines.css';
+import { auth, db } from '/src/assets/firebase'
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
 
-export default function Deadlines() {
+export default function Deadlines({ theme }) {
+  const [userData, setUserData] = useState(null);
   const [filter, setFilter] = useState('all'); // all, assignment, exam, project
+  const [newDeadline, setNewDeadline] = useState(false);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [deadline, setDeadline] = useState(null);
 
-  const allDeadlines = [
-    {
-      id: 1,
-      title: 'Advanced AI Project Proposal',
-      course: 'Machine Learning',
-      type: 'project',
-      dueDate: 'Apr 28, 2026',
-      time: '11:59 PM',
-      urgency: 'high',
-      progress: 40,
-    },
-    {
-      id: 2,
-      title: 'Midterm Exam',
-      course: 'Distributed Systems',
-      type: 'exam',
-      dueDate: 'Apr 29, 2026',
-      time: '9:00 AM',
-      urgency: 'high',
-      progress: 0,
-    },
-    {
-      id: 3,
-      title: 'HCI Usability Testing Report',
-      course: 'Human-Computer Interaction',
-      type: 'assignment',
-      dueDate: 'May 1, 2026',
-      time: '5:00 PM',
-      urgency: 'medium',
-      progress: 75,
-    },
-    {
-      id: 4,
-      title: 'Software Engineering Group Presentation',
-      course: 'Software Engineering',
-      type: 'project',
-      dueDate: 'May 2, 2026',
-      time: '2:30 PM',
-      urgency: 'medium',
-      progress: 90,
-    },
-    {
-      id: 5,
-      title: 'Weekly Math Problem Set 10',
-      course: 'Discrete Mathematics',
-      type: 'assignment',
-      dueDate: 'May 5, 2026',
-      time: '11:59 PM',
-      urgency: 'low',
-      progress: 10,
-    },
-    {
-      id: 6,
-      title: 'Final Research Paper',
-      course: 'Cybersecurity',
-      type: 'project',
-      dueDate: 'May 15, 2026',
-      time: '11:59 PM',
-      urgency: 'low',
-      progress: 20,
+  const getUserdata = async () => {
+    try {
+      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        setUserData(userData);
+      }
     }
-  ];
+    catch (err) {
+      console.error(err);
+    }
+  }
 
-  const filteredDeadlines = filter === 'all' 
-    ? allDeadlines 
+  useEffect(() => {
+    if (auth.currentUser) {
+      getUserdata();
+    }
+  });
+
+  const allDeadlines = userData?.deadlines || [];
+
+  const deadlineExists = allDeadlines.length > 0;
+
+  const filteredDeadlines = filter === 'all'
+    ? allDeadlines
     : allDeadlines.filter(d => d.type === filter);
 
   const getUrgencyColor = (urgency) => {
-    switch(urgency) {
+    switch (urgency) {
       case 'high': return 'var(--danger, #ff4d4d)';
       case 'medium': return 'var(--warning, #ffa64d)';
       case 'low': return 'var(--mint-strong, #52b788)';
@@ -82,13 +50,54 @@ export default function Deadlines() {
   };
 
   const getTypeIcon = (type) => {
-    switch(type) {
+    switch (type) {
       case 'assignment': return <FileText size={18} />;
       case 'exam': return <AlertCircle size={18} />;
       case 'project': return <Calendar size={18} />;
       default: return <FileText size={18} />;
     }
   };
+
+  const enterNewDeadline = () => {
+    setNewDeadline(true);
+  };
+
+  const onComplete = async (deadline) => {
+    let idToBeDeleted = deadline.id;
+    const userDoc = doc(db, "users", auth.currentUser.uid);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const docRef = await transaction.get(userDoc);
+        if (!docRef.exists()) throw "User does not exist";
+        const existingDeadlines = docRef.data().deadlines || [];
+
+        const newDeadlineArray = existingDeadlines.filter((item) => item.id != idToBeDeleted);
+
+        transaction.update(userDoc, { deadlines: newDeadlineArray });
+      });
+      setConfirmDeleteVisible(false);
+    }
+    catch (err) {
+      console.error(err);
+    }
+  };
+
+  const confirmDelete = (deadline) => {
+    setConfirmDeleteVisible(true);
+    setDeadline(deadline);
+  };
+
+  if (confirmDeleteVisible) {
+    return (<Modal
+      modalVisible={confirmDeleteVisible}
+      title="Are you sure?"
+      onConfirm={() => onComplete(deadline)}
+      onCancel={() => setConfirmDeleteVisible(false)}
+      confirmText='Delete'
+    >
+      <p>This Deadline will be deleted</p>
+    </Modal>);
+  }
 
   return (
     <div className="deadlines-container">
@@ -102,31 +111,32 @@ export default function Deadlines() {
             <Search size={18} className="search-icon" />
             <input type="text" placeholder="Search deadlines..." />
           </div>
-          <button className="add-deadline-btn">+ New Deadline</button>
+          <button className="add-deadline-btn" onClick={enterNewDeadline}>+ New Deadline</button>
+          {newDeadline && <NewDeadline onCancel={() => setNewDeadline(false)} />}
         </div>
       </div>
 
       <div className="filters-section">
         <div className="filter-tabs">
-          <button 
+          <button
             className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
             All Tasks
           </button>
-          <button 
+          <button
             className={`filter-tab ${filter === 'assignment' ? 'active' : ''}`}
             onClick={() => setFilter('assignment')}
           >
             Assignments
           </button>
-          <button 
+          <button
             className={`filter-tab ${filter === 'project' ? 'active' : ''}`}
             onClick={() => setFilter('project')}
           >
             Projects
           </button>
-          <button 
+          <button
             className={`filter-tab ${filter === 'exam' ? 'active' : ''}`}
             onClick={() => setFilter('exam')}
           >
@@ -139,12 +149,12 @@ export default function Deadlines() {
       </div>
 
       <div className="deadlines-grid">
-        {filteredDeadlines.map((deadline) => (
+        {deadlineExists && filteredDeadlines.map((deadline) => (
           <div className="deadline-card" key={deadline.id}>
             <div className="card-top">
-              <span 
-                className="type-badge" 
-                style={{ 
+              <span
+                className="type-badge"
+                style={{
                   backgroundColor: `${getUrgencyColor(deadline.urgency)}20`,
                   color: getUrgencyColor(deadline.urgency),
                   border: `1px solid ${getUrgencyColor(deadline.urgency)}40`
@@ -153,14 +163,14 @@ export default function Deadlines() {
                 {getTypeIcon(deadline.type)}
                 {deadline.type.charAt(0).toUpperCase() + deadline.type.slice(1)}
               </span>
-              <button className="complete-btn" title="Mark as complete">
+              <button className="complete-btn" title="Mark as complete" onClick={()=>confirmDelete(deadline)}>
                 <CheckCircle size={20} />
               </button>
             </div>
-            
+
             <h3 className="card-title">{deadline.title}</h3>
             <p className="card-course">{deadline.course}</p>
-            
+
             <div className="card-datetime">
               <div className="datetime-item">
                 <Calendar size={16} className="icon-mint" />
@@ -171,25 +181,38 @@ export default function Deadlines() {
                 <span>{deadline.time}</span>
               </div>
             </div>
-            
+
             <div className="progress-section">
               <div className="progress-header">
                 <span className="progress-label">Progress</span>
                 <span className="progress-value">{deadline.progress}%</span>
               </div>
               <div className="progress-bar-bg">
-                <div 
-                  className="progress-bar-fill" 
-                  style={{ 
+                <div
+                  className="progress-bar-fill"
+                  style={{
                     width: `${deadline.progress}%`,
                     backgroundColor: getUrgencyColor(deadline.urgency)
                   }}
                 ></div>
               </div>
             </div>
-            
           </div>
         ))}
+      </div>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        position: "relative",
+        width: "100%",
+        height: "450px"
+      }}>
+        {!deadlineExists && <div className='no-deadline-container'>
+          <img src={`/src/assets/relax${theme === "dark" ? "" : "-light"}.png`} style={{ filter: "none" }} />
+          <h2 style={{ fontFamily: "\"Cinzel\", serif" }}>Yay!</h2>
+          <p>No Deadlines</p></div>}
       </div>
     </div>
   );
