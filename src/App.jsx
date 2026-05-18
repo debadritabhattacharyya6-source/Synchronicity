@@ -29,9 +29,16 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      setCurrentScreen("app");
+      if (currentUser) {
+        console.log(currentUser);
+        setUser(currentUser);
+        setLoading(false);
+        setCurrentScreen("app");
+      }
+      else{
+        setLoading(false);
+        setCurrentScreen("intro");
+      }
     });
 
     return () => unsubscribe();
@@ -58,7 +65,7 @@ function App() {
     if (location.state?.currentScreen === "intro") {
       setCurrentScreen(location.state?.currentScreen);
     }
-    else if(location.state?.currentScreen === 'userdetails'){
+    else if (location.state?.currentScreen === 'userdetails') {
       setCurrentScreen(location.state?.currentScreen);
     }
   }, [location]);
@@ -106,9 +113,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/deadlines" element={<Deadlines theme={theme}/>} />
+          <Route path="/deadlines" element={<Deadlines theme={theme} />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/collaboration" element={<Collaborations/>} />
+          <Route path="/collaboration" element={<Collaborations />} />
           <Route path="/profile" element={<Profile />} />
           <Route
             path="/settings"
