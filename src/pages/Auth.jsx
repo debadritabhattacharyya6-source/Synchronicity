@@ -3,7 +3,7 @@ import "./Auth.css";
 import logo from "/src/assets/syncspace-logo.png"; // adjust path
 import { auth, googleProvider, db } from "/src/assets/firebase"
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { createUserWithEmailAndPassword, signInWithPopup, signInWithEmailAndPassword, signInAnonymously } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { FcGoogle } from "react-icons/fc";
 import { MdErrorOutline } from "react-icons/md";
 
@@ -12,9 +12,19 @@ export default function Auth({ mode, setMode, onComplete }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
 
+  const createUserDocument = async (userCredential) => {
+    try {
+      await setDoc(doc(db, "users", userCredential.user.uid), {}, { merge: true });
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    };
+  }
   const signUpWithEmail = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      createUserDocument(userCredential);
       return true;
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
@@ -24,78 +34,33 @@ export default function Auth({ mode, setMode, onComplete }) {
       return false;
     }
   };
-
   const signInWithEmail = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return true;
     }
     catch (err) {
-      console.log("Original login failed, trying automatic signup fallback...", err);
-      try {
-        // Fallback 1: Try to automatically sign them up if they enter a new email and password
-        await createUserWithEmailAndPassword(auth, email, password);
-        return true;
-      } catch (signupErr) {
-        console.log("Automatic signup fallback failed...", signupErr);
-        try {
-          // Fallback 2: If the email is in use but password is wrong, log them in anonymously as a guest bypass
-          console.log("Attempting anonymous guest login bypass...");
-          const userCredential = await signInAnonymously(auth);
-          // Set cache instantly so they bypass the loading screen!
-          localStorage.setItem(`syncspace_profile_completed_${userCredential.user.uid}`, "true");
-          await setDoc(doc(db, "users", userCredential.user.uid), {
-            firstName: email.split("@")[0],
-            lastName: "Guest",
-            email: email,
-            university: "SyncSpace University",
-            branch: "Computer Science",
-            phone: "1234567890",
-            deadlines: []
-          }, { merge: true });
-          return true;
-        } catch (anonErr) {
-          console.error("Anonymous guest fallback failed:", anonErr);
-          setError(true);
-          return false;
-        }
-      }
+      console.log(err);
+      setError(true);
+      return false;
     }
   };
-
   const signUpWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
-      onComplete(false);
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (docSnap.exists()) {
+        onComplete(false);
+        return;
+      }
+      else {
+        createUserDocument(userCredential);
+        onComplete(true);
+      }
     } catch (err) {
-      console.error("Google Authentication failed:", err);
-      alert("Sign in with Google failed: " + (err.message || err));
+      console.error(err);
     }
   };
-
-  const signInAsGuest = async () => {
-    try {
-      setError(false);
-      console.log("Quick guest bypass triggered...");
-      const userCredential = await signInAnonymously(auth);
-      // Pre-set completed cache so they don't wait on the loading screen!
-      localStorage.setItem(`syncspace_profile_completed_${userCredential.user.uid}`, "true");
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        firstName: "Guest",
-        lastName: "User",
-        email: "guest@syncspace.com",
-        university: "SyncSpace University",
-        branch: "Computer Science",
-        phone: "1234567890",
-        deadlines: []
-      }, { merge: true });
-      onComplete(false);
-    } catch (err) {
-      console.error("Guest login failed:", err);
-      alert("Guest login failed: " + (err.message || err));
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(false);
