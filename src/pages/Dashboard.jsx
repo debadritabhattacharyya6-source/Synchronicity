@@ -3,6 +3,7 @@ import './Dashboard.css';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import { auth, db } from "/src/assets/firebase"
 import { doc, getDoc } from "firebase/firestore";
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   // Dynamic Mock Data
@@ -26,7 +27,12 @@ export default function Dashboard() {
     catch (err) {
       console.error(err);
     }
-  }
+  };
+  const navigate = useNavigate();
+  const viewAll = () => {
+    navigate('/deadlines');
+  };
+
   useEffect(() => {
     if(!auth.currentUser) return;
     getUsername()
@@ -148,7 +154,7 @@ export default function Dashboard() {
         <div className="section-card">
           <div className="section-header">
             <h2>Upcoming Deadlines</h2>
-            <button className="view-all-btn">View All</button>
+            <button className="view-all-btn" onClick={viewAll}>View All</button>
           </div>
 
           <div className="deadlines-list">

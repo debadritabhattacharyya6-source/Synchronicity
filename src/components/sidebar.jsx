@@ -14,74 +14,75 @@ import {
 } from "lucide-react";
 
 
-export default function Sidebar({theme}) {
+export default function Sidebar({ theme }) {
   const logo = theme === "light" ? logoLight : logoDark;
   //const logo = logoLight;
   return (
     <div className="sidebar">
       <div className="logo">
-  <img key={theme} src={logo} alt="logo" className="logo-img" />
-</div>
+        <img key={theme} src={logo} alt="logo" className="logo-img" />
+      </div>
 
       <nav>
         <NavLink
-  to="/"
-  end
-  className={({ isActive }) =>
-    `nav-item ${isActive ? "active" : ""}`
-  }
->
-  <LayoutDashboard size={18} />
-    <span>Dashboard</span>
+          to="/"
+          end
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          <LayoutDashboard size={18} />
+          <span>Dashboard</span>
 
-</NavLink>
+        </NavLink>
 
         <NavLink to="/calendar"
-        
-  className={({ isActive }) =>
-    `nav-item ${isActive ? "active" : ""}`
-  }>
+
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }>
           <Calendar size={18} />
-    <span>Calendar</span>
+          <span>Calendar</span>
         </NavLink>
 
         <NavLink to="/deadlines"
-        
-  className={({ isActive }) =>
-    `nav-item ${isActive ? "active" : ""}`
-  }>
+
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }>
           <Clock size={18} />
-    <span>Deadlines</span>
+          <span>Deadlines</span>
         </NavLink>
 
-        <NavLink   to="/analytics"
-        
-  className={({ isActive }) =>
-    `nav-item ${isActive ? "active" : ""}`
-  }
->
-          <BarChart3 size={18} />
-    <span>Analytics</span>
-        </NavLink>
+        <NavLink to="/collaboration"
 
-        <NavLink   to="/collaboration"
-        
-  className={({ isActive }) =>
-    `nav-item ${isActive ? "active" : ""}`
-  }
->
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
           <Users size={18} />
-    <span>Collaboration</span>
+          <span>Collaboration</span>
         </NavLink>
 
-        <NavLink   to="/settings"
+          
+        <NavLink to="/analytics"
+
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          <BarChart3 size={18} />
+          <span>Analytics</span>
+        </NavLink>
         
-  className={({ isActive }) =>
-    `nav-item ${isActive ? "active" : ""}`
-  }
->
+        <NavLink to="/settings"
+
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+        >
           <Settings size={18} />
-    <span>Settings</span>
+          <span>Settings</span>
         </NavLink>
       </nav>
     </div>
