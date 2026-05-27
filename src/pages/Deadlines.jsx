@@ -30,7 +30,7 @@ export default function Deadlines({ theme }) {
     if (auth.currentUser) {
       getUserdata();
     }
-  });
+  }, []);
 
   const allDeadlines = userData?.deadlines || [];
 

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
-import { auth, db } from "/src/assets/firebase"
-import { doc, getDoc } from "firebase/firestore";
 
 export default function Dashboard() {
   // Dynamic Mock Data
@@ -13,27 +11,6 @@ export default function Dashboard() {
     productivityScore: 0,
   });
 
-  const [nameOfCurrentUser, setNameOfCurrentUser] = useState("");
-  const getUsername = async () => {
-    try {
-      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-      if (docSnap.exists() && docSnap.data()?.firstName) {
-        setNameOfCurrentUser(docSnap.data().firstName);
-      } else {
-        const displayName = auth.currentUser?.displayName;
-        setNameOfCurrentUser(displayName ? displayName.split(" ")[0] : (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
-      }
-    }
-    catch (err) {
-      console.error("Dashboard database fetch error:", err);
-      const displayName = auth.currentUser?.displayName;
-      setNameOfCurrentUser(displayName ? displayName.split(" ")[0] : (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
-    }
-  }
-  useEffect(() => {
-    if(!auth.currentUser) return;
-    getUsername()
-  }, []);
   const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {
@@ -101,7 +78,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Welcome back, {nameOfCurrentUser}</h1>
+        <h1>Welcome back, Prathama</h1>
         <p className="dashboard-subtitle">Here's a look at your academic workload this week.</p>
       </div>
 
@@ -153,7 +130,7 @@ export default function Dashboard() {
             <h2>Upcoming Deadlines</h2>
             <button className="view-all-btn">View All</button>
           </div>
-
+          
           <div className="deadlines-list">
             {deadlines.map((item) => (
               <div className="deadline-item" key={item.id}>
@@ -177,7 +154,7 @@ export default function Dashboard() {
           <div className="section-header">
             <h2>Stress Heatmap</h2>
           </div>
-
+          
           <div className="heatmap-container">
             <div className="heatmap-days">
               {days.map((day, i) => (
@@ -189,7 +166,7 @@ export default function Dashboard() {
                 <div key={i} className={`heatmap-cell heat-${val}`} title={`Stress level: ${val}`}></div>
               ))}
             </div>
-
+            
             <div className="heatmap-legend">
               <span className="legend-text">Low Stress</span>
               <div className="legend-dots">

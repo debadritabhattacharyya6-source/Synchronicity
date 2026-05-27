@@ -2,7 +2,8 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from '/src/assets/firebase'
+import { auth, db } from '/src/assets/firebase'
+import { doc, getDoc } from "firebase/firestore";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Intro from "./pages/Intro";
 import Sidebar from "./components/Sidebar";
@@ -28,12 +29,23 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         console.log(currentUser);
         setUser(currentUser);
-        setLoading(false);
-        setCurrentScreen("app");  
+        setLoading(false); // Unblock instantly!
+        
+        try {
+          const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+          if (docSnap.exists() && docSnap.data()?.firstName) {
+            setCurrentScreen("app");
+          } else {
+            setCurrentScreen("userdetails");
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+          setCurrentScreen("app");
+        }
       }
       else{
         setLoading(false);
