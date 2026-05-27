@@ -12,20 +12,9 @@ export default function Auth({ mode, setMode, onComplete }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
 
-  const createUserDocument = async (userCredential) => {
-    try {
-      await setDoc(doc(db, "users", userCredential.user.uid), {}, { merge: true });
-      return true;
-    } catch (err) {
-      console.log(err);
-      return false;
-    };
-  }
-
   const signUpWithEmail = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await createUserDocument(userCredential);
+      await createUserWithEmailAndPassword(auth, email, password);
       return true;
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
@@ -45,8 +34,7 @@ export default function Auth({ mode, setMode, onComplete }) {
       console.log("Original login failed, trying automatic signup fallback...", err);
       try {
         // Fallback 1: Try to automatically sign them up if they enter a new email and password
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await createUserDocument(userCredential);
+        await createUserWithEmailAndPassword(auth, email, password);
         return true;
       } catch (signupErr) {
         console.log("Automatic signup fallback failed...", signupErr);
@@ -77,8 +65,7 @@ export default function Auth({ mode, setMode, onComplete }) {
 
   const signUpWithGoogle = async () => {
     try {
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      await createUserDocument(userCredential);
+      await signInWithPopup(auth, googleProvider);
       onComplete(false);
     } catch (err) {
       console.error("Google Authentication failed:", err);
