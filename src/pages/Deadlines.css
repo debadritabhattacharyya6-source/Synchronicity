@@ -1,6 +1,7 @@
 .deadlines-container {
   padding: 24px;
   animation: fadeIn 0.4s ease-out;
+  position:relative;
 }
 
 @keyframes fadeIn {
@@ -319,4 +320,14 @@
   .sort-btn {
     align-self: flex-end;
   }
+}
+
+.no-deadline-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position:absolute;
 }

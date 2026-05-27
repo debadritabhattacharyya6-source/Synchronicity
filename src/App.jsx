@@ -2,7 +2,8 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from '/src/assets/firebase'
+import { auth, db } from '/src/assets/firebase'
+import { doc, getDoc } from "firebase/firestore";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Intro from "./pages/Intro";
 import Sidebar from "./components/Sidebar";
@@ -28,10 +29,28 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      setCurrentScreen("app");
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        console.log(currentUser);
+        setUser(currentUser);
+        setLoading(false); // Unblock instantly!
+        
+        try {
+          const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+          if (docSnap.exists() && docSnap.data()?.firstName) {
+            setCurrentScreen("app");
+          } else {
+            setCurrentScreen("userdetails");
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+          setCurrentScreen("app");
+        }
+      }
+      else{
+        setLoading(false);
+        setCurrentScreen("intro");
+      }
     });
 
     return () => unsubscribe();
@@ -58,7 +77,7 @@ function App() {
     if (location.state?.currentScreen === "intro") {
       setCurrentScreen(location.state?.currentScreen);
     }
-    else if(location.state?.currentScreen === 'userdetails'){
+    else if (location.state?.currentScreen === 'userdetails') {
       setCurrentScreen(location.state?.currentScreen);
     }
   }, [location]);
@@ -106,9 +125,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/deadlines" element={<Deadlines />} />
+          <Route path="/deadlines" element={<Deadlines theme={theme} />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/collaboration" element={<Collaborations/>} />
+          <Route path="/collaboration" element={<Collaborations />} />
           <Route path="/profile" element={<Profile />} />
           <Route
             path="/settings"

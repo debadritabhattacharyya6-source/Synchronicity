@@ -7,19 +7,6 @@
   align-items: center;
   position: relative;
   overflow: hidden;
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    transform: translateY(-40px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 
 .auth-container {
@@ -114,14 +101,6 @@
   font-size: 14px;
 }
 
-.auth-or {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  color: var(--text-secondary);
-  font-size: 20px;
-  font-family: "Cinzel", serif;
-}
-
 .auth-toggle-link {
   color: var(--mint);
   cursor: pointer;
@@ -132,88 +111,4 @@
 .auth-toggle-link:hover {
   color: var(--frosted-mint);
   text-decoration: underline;
-}
-
-.logo-img-google {
-  height: 30px;
-  width: 30px;
-  object-fit: contain;
-  display: block;
-  position: relative;
-  border: none;
-}
-
-.auth-google {
-  height: 50px;
-  width: 250px;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  background-color: transparent;
-  color: var(--text-secondary);
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-}
-
-.auth-google:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
-}
-
-.auth-error {
-  color: crimson;
-  font-family: serif;
-  text-align: left;
-}
-
-.type-group {
-  padding-left: 10px;
-  align-items: flex-start;
-  justify-content: left;
-  display: flex;
-  flex-direction: column;
-}
-
-.radio-item {
-  display: flex;
-  align-items: center;
-  gap : 10px;
-  margin-bottom: 10px;
-}
-
-input[type='radio'] {
-  appearance: none !important;
-  accent-color: #449973;
-  background-color: transparent;
-  width: 1.15em !important;
-  border-radius: 0%;
-  display: grid;
-  place-content: center;
-  transform: scale(0.7) rotate(45deg);
-  box-sizing: border-box;
-  aspect-ratio: 1/1;
-  position: relative;
-  border-color: rgba(168, 255, 203, 0.5);
-}
-
-input[type='radio']:checked{
-  box-shadow: 0 0 5px rgba(168, 255, 203, 0.8);
-}
-
-input[type='radio']::before {
-  content: "";
-  width: 0.75em;
-  border-radius: 0%;
-  transform: translate(-50%, -50%) scale(0);
-  transition: 120ms transform ease-in-out;
-  box-shadow: inset 1em 1em rgb(39, 135, 39);
-  box-sizing: border-box;
-  aspect-ratio: 1 / 1;
-  position:absolute;
-  top:50%;
-  left: 50%;
-}
-
-input[type='radio']:checked::before {
-  transform: translate(-50%, -50%) scale(1);
 }
