@@ -33,7 +33,7 @@ function App() {
         console.log(currentUser);
         setUser(currentUser);
         setLoading(false);
-        setCurrentScreen("app");
+        setCurrentScreen("app");  
       }
       else{
         setLoading(false);

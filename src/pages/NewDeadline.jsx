@@ -163,6 +163,7 @@ export default function NewDeadline({ onCancel }) {
                                 type='date'
                                 id='lastDate'
                                 value={deadlineDate}
+                                min={new Date().toISOString().split('T')[0]}
                                 onChange={(e) => setDeadlineDate(e.target.value)}
                                 required
                             />
