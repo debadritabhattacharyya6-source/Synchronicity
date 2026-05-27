@@ -923,3 +923,601 @@
     transform:scale(1);
   }
 }
+
+/* =========================================
+   WORKSPACE HEADER
+========================================= */
+
+.workspace-header{
+  display:flex;
+
+  justify-content:space-between;
+  align-items:center;
+
+  margin:40px 0 28px 0;
+
+  padding:28px 32px;
+
+  border-radius:28px;
+
+  background:var(--bg-card);
+
+  border:1px solid var(--border-strong);
+
+  backdrop-filter:blur(18px);
+
+  position:relative;
+
+  overflow:hidden;
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.22);
+}
+
+/* subtle glow */
+
+.workspace-header::before{
+  content:"";
+
+  position:absolute;
+
+  width:280px;
+  height:280px;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(116,198,157,0.18),
+      transparent 70%
+    );
+
+  top:-120px;
+  right:-80px;
+
+  pointer-events:none;
+}
+
+/* LEFT CONTENT */
+
+.workspace-header h2{
+  font-size:2.3rem;
+
+  font-weight:800;
+
+  margin-bottom:8px;
+
+  letter-spacing:-1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      var(--frosted-mint) 40%,
+      var(--mint) 100%
+    );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.workspace-header p{
+  color:var(--text-secondary);
+
+  font-size:0.98rem;
+
+  letter-spacing:0.2px;
+}
+
+/* INVITE BUTTON */
+
+.workspace-header button{
+  border:none;
+
+  padding:14px 22px;
+
+  border-radius:18px;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:0.3s ease;
+
+  color:#04130d;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--mint),
+      var(--mint-strong)
+    );
+
+  box-shadow:
+    0 10px 24px rgba(82,183,136,0.22);
+}
+
+.workspace-header button:hover{
+  transform:translateY(-3px);
+
+  box-shadow:
+    0 16px 34px rgba(82,183,136,0.35);
+}
+
+/* =========================================
+   ACTIVE GROUP CARD
+========================================= */
+
+.active-group{
+  border:1px solid rgba(116,198,157,0.35) !important;
+
+  transform:translateY(-6px);
+
+  box-shadow:
+    0 18px 40px rgba(82,183,136,0.14),
+    0 0 0 1px rgba(116,198,157,0.08);
+
+  position:relative;
+
+  overflow:hidden;
+}
+
+.active-group::before{
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(116,198,157,0.08),
+      transparent 40%
+    );
+
+  pointer-events:none;
+}
+
+/* glowing indicator */
+
+.active-group::after{
+  content:"ACTIVE";
+
+  position:absolute;
+
+  top:16px;
+  right:16px;
+
+  font-size:0.68rem;
+
+  font-weight:700;
+
+  padding:6px 10px;
+
+  border-radius:999px;
+
+  color:#052e1f;
+
+  background:
+    linear-gradient(
+      135deg,
+      #4ade80,
+      #22c55e
+    );
+
+  box-shadow:
+    0 0 18px rgba(34,197,94,0.4);
+}
+
+/* =========================================
+   GROUP CARD INTERACTION
+========================================= */
+
+.group-card{
+  cursor:pointer;
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border 0.3s ease;
+}
+
+.group-card:hover{
+  transform:translateY(-6px);
+
+  box-shadow:
+    0 18px 36px rgba(0,0,0,0.28);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:900px){
+
+  .workspace-header{
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    gap:22px;
+  }
+
+  .workspace-header button{
+    width:100%;
+  }
+
+  .workspace-header h2{
+    font-size:1.9rem;
+  }
+}
+
+.workspace-code{
+  margin-top:14px;
+
+  display:flex;
+  flex-direction:column;
+
+  gap:6px;
+}
+
+.workspace-code span{
+  color:var(--text-secondary);
+
+  font-size:0.85rem;
+}
+
+.workspace-code strong{
+  font-size:1.1rem;
+
+  letter-spacing:1px;
+
+  color:var(--mint);
+}
+
+.copy-btn{
+  margin-top:14px;
+
+  border:none;
+
+  background:
+    rgba(116,198,157,0.12);
+
+  color:var(--mint);
+
+  padding:12px 18px;
+
+  border-radius:14px;
+
+  cursor:pointer;
+
+  transition:0.3s ease;
+}
+
+.copy-btn:hover{
+  background:
+    rgba(116,198,157,0.2);
+}
+/* =========================================
+   INVITE MODAL
+========================================= */
+
+.invite-overlay{
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,0.45);
+
+  backdrop-filter:blur(6px);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  z-index:1000;
+}
+
+.invite-modal{
+  width:420px;
+
+  background:var(--bg-card);
+
+  border:1px solid var(--border-subtle);
+
+  border-radius:24px;
+
+  padding:28px;
+
+  backdrop-filter:blur(18px);
+
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.24);
+}
+
+/* TOP */
+
+.invite-top{
+  display:flex;
+
+  justify-content:space-between;
+  align-items:flex-start;
+
+  margin-bottom:28px;
+}
+
+.invite-top h2{
+  font-size:1.5rem;
+
+  margin-bottom:6px;
+
+  color:var(--text-primary);
+}
+
+.invite-top p{
+  color:var(--text-secondary);
+
+  font-size:0.92rem;
+
+  line-height:1.5;
+}
+
+.close-invite{
+  border:none;
+
+  background:transparent;
+
+  color:var(--text-secondary);
+
+  font-size:1.4rem;
+
+  cursor:pointer;
+
+  transition:0.2s ease;
+}
+
+.close-invite:hover{
+  color:var(--text-primary);
+}
+
+/* CODE BOX */
+
+.invite-code-box{
+  padding:20px;
+
+  border-radius:18px;
+
+  background:
+    rgba(255,255,255,0.03);
+
+  border:
+    1px solid var(--border-subtle);
+
+  margin-bottom:18px;
+}
+
+.invite-code-box span{
+  display:block;
+
+  color:var(--text-secondary);
+
+  font-size:0.82rem;
+
+  margin-bottom:10px;
+}
+
+.invite-code-box strong{
+  font-size:1.5rem;
+
+  letter-spacing:2px;
+
+  color:var(--mint);
+
+  font-weight:700;
+}
+
+/* COPY BUTTON */
+
+.copy-code-btn{
+  width:100%;
+
+  padding:14px;
+
+  border:none;
+
+  border-radius:16px;
+
+  cursor:pointer;
+
+  font-weight:600;
+
+  margin-bottom:20px;
+
+  transition:0.25s ease;
+
+  color:var(--text-primary);
+
+  background:
+    rgba(116,198,157,0.12);
+
+  border:
+    1px solid rgba(116,198,157,0.18);
+}
+
+.copy-code-btn:hover{
+  background:
+    rgba(116,198,157,0.18);
+}
+
+/* SHARE LINK */
+
+.share-link{
+  padding:16px 18px;
+
+  border-radius:16px;
+
+  background:
+    rgba(255,255,255,0.025);
+
+  border:
+    1px solid var(--border-subtle);
+}
+
+.share-link span{
+  display:block;
+
+  color:var(--text-secondary);
+
+  font-size:0.8rem;
+
+  margin-bottom:8px;
+}
+
+.share-link p{
+  color:var(--text-primary);
+
+  font-size:0.95rem;
+
+  word-break:break-all;
+
+  line-height:1.5;
+}
+.add-task-btn{
+  border: none;
+  outline: none;
+
+  padding: 0.8rem 1.3rem;
+
+  border-radius: 14px;
+
+  background: linear-gradient(
+    135deg,
+    #52b788,
+    #74c69d
+  );
+
+  color: white;
+
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    0 8px 25px rgba(82,183,136,0.28);
+}
+
+.add-task-btn:hover{
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 14px 30px rgba(82,183,136,0.38);
+
+  background: linear-gradient(
+    135deg,
+    #40916c,
+    #52b788
+  );
+}
+
+.add-task-btn:active{
+  transform: scale(0.97);
+}
+
+
+/* TASK HEADER */
+
+.section-header{
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 1rem;
+
+  margin-bottom: 1.5rem;
+}
+
+
+/* TASK MODAL SELECT */
+
+.team-modal select{
+  width: 100%;
+
+  padding: 1rem;
+
+  border-radius: 14px;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  background: rgba(255,255,255,0.04);
+
+  color: white;
+
+  font-size: 0.95rem;
+
+  outline: none;
+
+  margin-top: 1rem;
+
+  transition: 0.25s ease;
+}
+
+.team-modal select:focus{
+  border-color: #52b788;
+
+  box-shadow:
+    0 0 0 4px rgba(82,183,136,0.15);
+}
+
+.team-modal select option{
+  background: #081c15;
+
+  color: white;
+}
+
+
+/* EMPTY TASK STATE */
+
+.task-column-empty{
+  margin-top: 1rem;
+
+  padding: 1rem;
+
+  border-radius: 14px;
+
+  text-align: center;
+
+  background: rgba(255,255,255,0.03);
+
+  border: 1px dashed rgba(255,255,255,0.08);
+
+  color: rgba(255,255,255,0.5);
+
+  font-size: 0.9rem;
+}
+
+
+/* TASK COLUMN ANIMATION */
+
+.task-card{
+  animation: fadeSlide 0.35s ease;
+}
+
+@keyframes fadeSlide{
+
+  from{
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to{
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
