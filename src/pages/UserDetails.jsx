@@ -18,7 +18,7 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
 
   const showError = () => toast.error("Something went wrong!");
 
-  const updateDetails = async () => {
+  const updateDetails = () => {
     try {
       const userDoc = doc(db, "users", auth.currentUser.uid);
       setDoc(userDoc, {
@@ -76,9 +76,9 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const success = await updateDetails();
+    const success = updateDetails();
     if (!success) {
       showError();
       return;

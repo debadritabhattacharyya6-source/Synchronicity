@@ -56,14 +56,15 @@ function App() {
           } else {
             setProfileData(null);
             localStorage.removeItem(`syncspace_profile_completed_${currentUser.uid}`);
-            setCurrentScreen("userdetails");
+            // Prevent background fetch race conditions from resetting screen once user completed signup details
+            setCurrentScreen(prev => prev === "app" ? "app" : "userdetails");
           }
         } catch (err) {
           console.error("Error fetching user data:", err);
           // If we had a cache hit, we are already in the app, don't kick them out on a network failure!
           if (!isCompletedCache) {
             setProfileData(null);
-            setCurrentScreen("userdetails"); // Safe default on database errors
+            setCurrentScreen(prev => prev === "app" ? "app" : "userdetails"); // Safe default on database errors
           }
         }
       }
