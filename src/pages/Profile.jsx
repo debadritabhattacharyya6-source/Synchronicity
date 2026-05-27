@@ -4,21 +4,20 @@ import './Profile.css';
 import Modal from '/src/components/Modal';
 import UserDetails from "/src/pages/UserDetails";
 import { Mail, Phone, MapPin, Briefcase, Camera } from 'lucide-react';
-import { auth, db } from "/src/assets/firebase";
+import { auth } from "/src/assets/firebase";
 import { signOut } from 'firebase/auth';
-import { doc, getDoc } from "firebase/firestore";
 
-export default function Profile() {
+export default function Profile({ profileData, setProfileData }) {
   const [userData, setUserData] = useState(() => {
     const user = auth.currentUser;
     return {
-      firstName: user?.displayName?.split(" ")[0] || "User",
-      middleName: "",
-      lastName: user?.displayName?.split(" ").slice(1).join(" ") || "",
-      university: "Loading...",
-      branch: "Loading...",
-      email: user?.email || "",
-      phone: "Loading..."
+      firstName: profileData?.firstName || user?.displayName?.split(" ")[0] || "User",
+      middleName: profileData?.middleName || "",
+      lastName: profileData?.lastName || user?.displayName?.split(" ").slice(1).join(" ") || "",
+      university: profileData?.university || "Not Set",
+      branch: profileData?.branch || "Not Set",
+      email: profileData?.email || user?.email || "",
+      phone: profileData?.phone || "Not Set"
     };
   });
   const [showModal, setShowModal] = useState(false);
@@ -28,47 +27,6 @@ export default function Profile() {
 
   const editProfile = () => {
     setShowEditProfile(true);
-  }
-
-  const getUserdata = async () => {
-    try {
-      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-      if (docSnap.exists() && docSnap.data()) {
-        const data = docSnap.data();
-        setUserData({
-          firstName: data.firstName || auth.currentUser?.displayName?.split(" ")[0] || "User",
-          middleName: data.middleName || "",
-          lastName: data.lastName || auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
-          university: data.university || "Not Set",
-          branch: data.branch || "Not Set",
-          email: data.email || auth.currentUser?.email || "",
-          phone: data.phone || "Not Set",
-          ...data
-        });
-      } else {
-        setUserData({
-          firstName: auth.currentUser?.displayName?.split(" ")[0] || "User",
-          middleName: "",
-          lastName: auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
-          university: "Not Set",
-          branch: "Not Set",
-          email: auth.currentUser?.email || "",
-          phone: "Not Set"
-        });
-      }
-    }
-    catch (err) {
-      console.error("Profile database fetch error:", err);
-      setUserData({
-        firstName: auth.currentUser?.displayName?.split(" ")[0] || "User",
-        middleName: "",
-        lastName: auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
-        university: "Not Set",
-        branch: "Not Set",
-        email: auth.currentUser?.email || "",
-        phone: "Not Set"
-      });
-    }
   }
 
   const logout = async () => {
@@ -87,9 +45,17 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    if (!auth.currentUser) return;
-    getUserdata();
-  }, []);
+    const user = auth.currentUser;
+    setUserData({
+      firstName: profileData?.firstName || user?.displayName?.split(" ")[0] || "User",
+      middleName: profileData?.middleName || "",
+      lastName: profileData?.lastName || user?.displayName?.split(" ").slice(1).join(" ") || "",
+      university: profileData?.university || "Not Set",
+      branch: profileData?.branch || "Not Set",
+      email: profileData?.email || user?.email || "",
+      phone: profileData?.phone || "Not Set"
+    });
+  }, [profileData]);
 
   return (
     <div className="profile-container">
@@ -140,8 +106,11 @@ export default function Profile() {
             <button className="btn-primary" onClick={editProfile}>Edit Profile</button>
             {showEditProfile && 
             <UserDetails
-              onComplete={() => { 
+              onComplete={(updatedData) => { 
                 setShowEditProfile(false);
+                if (updatedData) {
+                  setProfileData(updatedData);
+                }
               }}
               first_name={userData.firstName}
               last_name={userData.lastName}
@@ -215,6 +184,5 @@ export default function Profile() {
         </div>
       </div>
     </div>
-
   );
 }

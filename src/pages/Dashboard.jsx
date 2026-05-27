@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
-import { auth, db } from "/src/assets/firebase"
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "/src/assets/firebase"
 import { useNavigate } from 'react-router-dom';
 
-export default function Dashboard() {
+export default function Dashboard({ profileData }) {
   // Dynamic Mock Data
   const [stats, setStats] = useState({
     dueThisWeek: 0,
@@ -14,32 +13,14 @@ export default function Dashboard() {
     productivityScore: 0,
   });
 
-  const [nameOfCurrentUser, setNameOfCurrentUser] = useState("");
-  const getUsername = async () => {
-    try {
-      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-      if (docSnap.exists() && docSnap.data()?.firstName) {
-        setNameOfCurrentUser(docSnap.data().firstName);
-      } else {
-        const displayName = auth.currentUser?.displayName;
-        setNameOfCurrentUser(displayName ? displayName.split(" ")[0] : (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
-      }
-    }
-    catch (err) {
-      console.error("Dashboard database fetch error:", err);
-      const displayName = auth.currentUser?.displayName;
-      setNameOfCurrentUser(displayName ? displayName.split(" ")[0] : (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
-    }
-  };
+  const greetingName = profileData?.firstName || 
+    (auth.currentUser?.displayName ? auth.currentUser.displayName.split(" ")[0] : 
+    (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
+
   const navigate = useNavigate();
   const viewAll = () => {
     navigate('/deadlines');
   };
-
-  useEffect(() => {
-    if(!auth.currentUser) return;
-    getUsername()
-  }, []);
   const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {
@@ -107,7 +88,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Welcome back, {nameOfCurrentUser}</h1>
+        <h1>Welcome back, {greetingName}</h1>
         <p className="dashboard-subtitle">Here's a look at your academic workload this week.</p>
       </div>
 
