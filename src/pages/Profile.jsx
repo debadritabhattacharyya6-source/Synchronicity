@@ -9,7 +9,18 @@ import { signOut } from 'firebase/auth';
 import { doc, getDoc } from "firebase/firestore";
 
 export default function Profile() {
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(() => {
+    const user = auth.currentUser;
+    return {
+      firstName: user?.displayName?.split(" ")[0] || "User",
+      middleName: "",
+      lastName: user?.displayName?.split(" ").slice(1).join(" ") || "",
+      university: "Loading...",
+      branch: "Loading...",
+      email: user?.email || "",
+      phone: "Loading..."
+    };
+  });
   const [showModal, setShowModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
 
@@ -22,13 +33,41 @@ export default function Profile() {
   const getUserdata = async () => {
     try {
       const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        setUserData(userData);
+      if (docSnap.exists() && docSnap.data()) {
+        const data = docSnap.data();
+        setUserData({
+          firstName: data.firstName || auth.currentUser?.displayName?.split(" ")[0] || "User",
+          middleName: data.middleName || "",
+          lastName: data.lastName || auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+          university: data.university || "Not Set",
+          branch: data.branch || "Not Set",
+          email: data.email || auth.currentUser?.email || "",
+          phone: data.phone || "Not Set",
+          ...data
+        });
+      } else {
+        setUserData({
+          firstName: auth.currentUser?.displayName?.split(" ")[0] || "User",
+          middleName: "",
+          lastName: auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+          university: "Not Set",
+          branch: "Not Set",
+          email: auth.currentUser?.email || "",
+          phone: "Not Set"
+        });
       }
     }
     catch (err) {
-      console.error(err);
+      console.error("Profile database fetch error:", err);
+      setUserData({
+        firstName: auth.currentUser?.displayName?.split(" ")[0] || "User",
+        middleName: "",
+        lastName: auth.currentUser?.displayName?.split(" ").slice(1).join(" ") || "",
+        university: "Not Set",
+        branch: "Not Set",
+        email: auth.currentUser?.email || "",
+        phone: "Not Set"
+      });
     }
   }
 
@@ -50,9 +89,8 @@ export default function Profile() {
   useEffect(() => {
     if (!auth.currentUser) return;
     getUserdata();
-  });
+  }, []);
 
-  if (!userData) return (<div>Loading profile...</div>)
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -65,7 +103,7 @@ export default function Profile() {
         <div className="profile-info-section">
           <div className="profile-avatar-wrapper">
             <div className="profile-avatar">
-              <span className="avatar-initials">{userData.firstName.charAt(0)}{userData.lastName.charAt(0)}</span>
+              <span className="avatar-initials">{(userData.firstName?.charAt(0) || '')}{(userData.lastName?.charAt(0) || '')}</span>
               <button className="edit-avatar-btn">
                 <Camera size={14} />
               </button>

@@ -144,6 +144,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  overflow-y: auto;
 }
 
 .calendar-cell:hover {
@@ -178,7 +179,6 @@
   color: var(--bg-base);
 }
 
-/* Fake Events for demonstration */
 .calendar-event {
   font-size: 0.75rem;
   padding: 4px 8px;
@@ -187,6 +187,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.calendar-event .event-title {
+  display: inline-block;
+  padding-right: 24px;
+}
+
+.calendar-event:hover .event-title {
+  animation: scrollLeft 4s linear infinite;
 }
 
 .event-blue {
@@ -207,13 +216,38 @@
   border: 1px solid rgba(52, 168, 83, 0.3);
 }
 
-[data-theme="light"] .event-blue { color: #1a73e8; }
-[data-theme="light"] .event-red { color: #d93025; }
-[data-theme="light"] .event-green { color: #1e8e3e; }
+[data-theme="light"] .event-blue {
+  color: #1a73e8;
+}
+
+[data-theme="light"] .event-red {
+  color: #d93025;
+}
+
+[data-theme="light"] .event-green {
+  color: #1e8e3e;
+}
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @media (max-width: 768px) {
@@ -222,12 +256,15 @@
     align-items: flex-start;
     gap: 15px;
   }
+
   .calendar-grid-body.month-view {
     grid-auto-rows: minmax(80px, 1fr);
   }
+
   .calendar-page {
     padding: 20px;
   }
+
   .day-name {
     font-size: 0.7rem;
   }

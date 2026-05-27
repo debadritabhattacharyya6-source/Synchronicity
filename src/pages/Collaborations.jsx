@@ -2,77 +2,131 @@ import { useEffect, useState } from "react";
 import "./Collaborations.css";
 
 export default function CollaborationPage() {
-  const [groups, setGroups] = useState([
-    {
-      title: "DBMS Project",
-      members: 5,
-      deadline: "3 days left",
-      progress: 30,
-    },
-    {
-      title: "Operating Systems",
-      members: 4,
-      deadline: "Tomorrow",
-      progress: 62,
-    },
-    {
-      title: "Hackathon Team",
-      members: 6,
-      deadline: "5 days left",
-      progress: 84,
-    },
-  ]);
+
+  const [groups, setGroups] = useState([]);
+  const [workspaceTasks, setWorkspaceTasks] =
+  useState({});
+
+  const [activeWorkspace, setActiveWorkspace] =
+  useState(null);
+
 const [showModal, setShowModal]= useState(false);
+
+const [showInviteModal, setShowInviteModal] =
+  useState(false);
 
 const[newTeam, setNewTeam]=useState({
     title:"",
     members: "",
     deadline:"",
-    progress:"",
+    
 })
-const tasks = {
-  todo: [
-    {
-      title: "Research APIs",
-      assigned: "Riya",
-      due: "Tomorrow",
-      priority: "High",
-    },
 
-    {
-      title: "Create Wireframes",
-      assigned: "Ananya",
-      due: "2 days",
-      priority: "Medium",
-    },
-  ],
+const tasks =
+  workspaceTasks[activeWorkspace] || {
+    todo: [],
+    progress: [],
+    review: [],
+    completed: [],
+  };
 
-  progress: [
-    {
-      title: "Frontend UI",
-      assigned: "Arjun",
-      due: "Today",
-      priority: "High",
-    },
-  ],
+  const [showTaskModal, setShowTaskModal] =
+  useState(false);
 
-  review: [
-    {
-      title: "PPT Slides",
-      assigned: "Neha",
-      due: "3 days",
-      priority: "Low",
-    },
-  ],
+const [newTask, setNewTask] =
+  useState({
+    title: "",
+    assigned: "",
+    due: "",
+    priority: "",
+  });
+  const handleAddTask = () => {
 
-  completed: [
-    {
-      title: "Project Proposal",
-      assigned: "Rahul",
-      due: "Completed",
-      priority: "Done",
+  if (
+    !newTask.title ||
+    !newTask.assigned ||
+    !newTask.due ||
+    !newTask.priority
+  ) {
+    return;
+  }
+
+  setWorkspaceTasks(prev => ({
+
+    ...prev,
+
+    [activeWorkspace]: {
+
+      ...prev[activeWorkspace],
+
+      todo: [
+        ...prev[activeWorkspace].todo,
+
+        {
+          ...newTask,
+        },
+      ],
     },
-  ],
+  }));
+
+  setNewTask({
+    title: "",
+    assigned: "",
+    due: "",
+    priority: "",
+  });
+
+  setShowTaskModal(false);
+};
+
+ 
+const [joinCode, setJoinCode] =
+  useState("");
+
+const [showJoinModal, setShowJoinModal] =
+  useState(false);
+
+  const handleJoinWorkspace = () => {
+
+  const foundGroup =
+    groups.find(
+      group =>
+        group.code === joinCode
+    );
+
+  if (!foundGroup) {
+    alert("Invalid workspace code");
+    return;
+  }
+
+  setActiveWorkspace(
+    foundGroup.title
+  );
+
+  setShowJoinModal(false);
+
+  setJoinCode("");
+};
+
+const calculateProgress = (workspaceName) => {
+
+  const workspace =
+    workspaceTasks[workspaceName];
+
+  if (!workspace) return 0;
+
+  const totalTasks =
+    workspace.todo.length +
+    workspace.progress.length +
+    workspace.review.length +
+    workspace.completed.length;
+
+  if (totalTasks === 0) return 0;
+
+  return Math.round(
+    (workspace.completed.length /
+      totalTasks) * 100
+  );
 };
 
 const getProgressColor = (progress) => {
@@ -102,22 +156,46 @@ const getProgressColor = (progress) => {
   };
 };
 
+const generateCode = () => {
+
+  const random =
+    Math.floor(
+      1000 + Math.random() * 9000
+    );
+
+  return `SYNC-${random}`;
+};
+
 const handleCreateTeam=()=>{
     if(
         !newTeam.title||
         !newTeam.members||
-        !newTeam.deadline||
-        !newTeam.progress
+        !newTeam.deadline
+        
     ){return;}
 
     const createdTeam={
         title: newTeam.title,
         members: Number(newTeam.members),
         deadline: newTeam.deadline,
-        progress: Number(newTeam.progress),
+        progress: 0,
+        code: generateCode(),
     }
 
     setGroups([...groups, createdTeam]);
+
+     setWorkspaceTasks(prev => ({
+  ...prev,
+
+  [newTeam.title]: {
+    todo: [],
+    progress: [],
+    review: [],
+    completed: [],
+  },
+}));
+    setActiveWorkspace(newTeam.title);
+
     setNewTeam({
     title: "",
     members: "",
@@ -127,7 +205,11 @@ const handleCreateTeam=()=>{
 
   setShowModal(false);
 };
-
+const activeGroup =
+  groups.find(
+    group =>
+      group.title === activeWorkspace
+  );
   return (
     <div className="collab-page">
 
@@ -165,9 +247,14 @@ const handleCreateTeam=()=>{
               Create Team
             </button>
 
-            <button className="secondary-btn">
-              Join Workspace
-            </button>
+            <button
+  className="secondary-btn"
+  onClick={() =>
+    setShowJoinModal(true)
+  }
+>
+  Join Workspace
+</button>
           </div>
         </div>
 
@@ -218,13 +305,20 @@ const handleCreateTeam=()=>{
             {groups.map((group, index) => {
 
             const status =
-                getProgressColor(group.progress);
+                getProgressColor(calculateProgress(group.title));
 
             return (
 
                 <div
-                className="group-card"
+                className={`group-card ${
+                  activeWorkspace === group.title
+                    ? "active-group"
+                    : ""
+                }`}
                 key={index}
+                 onClick={() =>
+                  setActiveWorkspace(group.title)
+                }
                 >
 
                 <div className="group-top">
@@ -237,13 +331,13 @@ const handleCreateTeam=()=>{
                         
                     }}
                     >
-                    {group.progress}%
+                    {calculateProgress(group.title)}%
                     </span>
 
                 </div>
 
                 <p>
-                    {group.members} Members • {group.deadline}
+                    {group.members} Members • {" "}{group.deadline}
                 </p>
 
                 <div className="progress-bar">
@@ -251,7 +345,7 @@ const handleCreateTeam=()=>{
                     <div
                     className="progress-fill"
                     style={{
-                        width: `${group.progress}%`,
+                        width: `${calculateProgress(group.title)}%`,
                         background: status.gradient,
                         boxShadow:
                         `0 0 18px ${status.border}`,
@@ -260,8 +354,10 @@ const handleCreateTeam=()=>{
 
                 </div>
 
+               
+
                 <small>
-                    Last updated 12 mins ago
+                  Click to open workspace
                 </small>
 
                 </div>
@@ -270,13 +366,62 @@ const handleCreateTeam=()=>{
 
         </div>
         </section>
+        
+        <div className="workspace-header">
 
+        
+          {groups.length === 0 ? (
 
+  <div className="empty-state">
+
+    <h2>No Workspaces Yet</h2>
+
+    <p>
+      Create or join a workspace to start collaborating.
+    </p>
+
+  </div>
+
+) :(
+
+  <>
+     <div>
+
+          <h2>{activeWorkspace}</h2>
+
+          <p>
+            Active collaboration workspace
+          </p>
+
+        </div>
+<button
+  onClick={() =>
+    setShowInviteModal(true)
+  }
+>
+  Invite Members
+</button>
+</>
+)}
+</div>
 
         <section className="section">
 
         <div className="section-header">
             <h2>Task Board</h2>
+
+              {activeWorkspace && (
+
+    <button
+      className="add-task-btn"
+      onClick={() =>
+        setShowTaskModal(true)
+      }
+    >
+      + Add Task
+    </button>
+
+  )}
         </div>
 
         <div className="task-board">
@@ -533,17 +678,7 @@ const handleCreateTeam=()=>{
         }
       />
 
-      <input
-        type="number"
-        placeholder="Progress %"
-        value={newTeam.progress}
-        onChange={(e) =>
-          setNewTeam({
-            ...newTeam,
-            progress: e.target.value,
-          })
-        }
-      />
+    
 
       <div className="modal-buttons">
 
@@ -567,6 +702,227 @@ const handleCreateTeam=()=>{
 
   </div>
 )}
+{/* INVITE MODAL */}
+
+{showInviteModal && (
+
+  <div className="invite-overlay">
+
+    <div className="invite-modal">
+
+      <div className="invite-top">
+
+        <div>
+
+          <h2>
+            Invite Members
+          </h2>
+
+          <p>
+            Share this workspace code
+            with your teammates.
+          </p>
+
+        </div>
+
+        <button
+          className="close-invite"
+          onClick={() =>
+            setShowInviteModal(false)
+          }
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div className="invite-code-box">
+
+        <span>
+          Workspace Code
+        </span>
+
+        <strong>
+          {activeGroup?.code}
+        </strong>
+
+      </div>
+
+      <button
+        className="copy-code-btn"
+        onClick={() => {
+
+          navigator.clipboard.writeText(
+            activeGroup?.code
+          );
+        }}
+      >
+        Copy Invite Code
+      </button>
+
+      <div className="share-link">
+
+        <span>
+          Share Link
+        </span>
+
+        <p>
+          syncsphere.app/join/
+          {activeGroup?.code}
+        </p>
+
+      </div>
 
     </div>
+
+  </div>
+)}
+
+{showJoinModal && (
+
+  <div className="modal-overlay">
+
+    <div className="team-modal">
+
+      <h2>Join Workspace</h2>
+
+      <input
+        type="text"
+        placeholder="Enter Invite Code"
+        value={joinCode}
+        onChange={(e) =>
+          setJoinCode(e.target.value)
+        }
+      />
+
+      <div className="modal-buttons">
+
+        <button
+          className="cancel-btn"
+          onClick={() =>
+            setShowJoinModal(false)
+          }
+        >
+          Cancel
+        </button>
+
+        <button
+          className="create-btn"
+          onClick={handleJoinWorkspace}
+        >
+          Join
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
+
+{showTaskModal && (
+
+  <div className="modal-overlay">
+
+    <div className="team-modal">
+
+      <h2>Add New Task</h2>
+
+      <input
+        type="text"
+        placeholder="Task Title"
+        value={newTask.title}
+        onChange={(e) =>
+          setNewTask({
+            ...newTask,
+            title: e.target.value,
+          })
+        }
+      />
+
+      <input
+        type="text"
+        placeholder="Assigned To"
+        value={newTask.assigned}
+        onChange={(e) =>
+          setNewTask({
+            ...newTask,
+            assigned: e.target.value,
+          })
+        }
+      />
+
+      <input
+        type="text"
+        placeholder="Due Date"
+        value={newTask.due}
+        onChange={(e) =>
+          setNewTask({
+            ...newTask,
+            due: e.target.value,
+          })
+        }
+      />
+
+      <select
+        value={newTask.priority}
+        onChange={(e) =>
+          setNewTask({
+            ...newTask,
+            priority: e.target.value,
+          })
+        }
+      >
+
+        <option value="">
+          Select Priority
+        </option>
+
+        <option value="Low">
+          Low
+        </option>
+
+        <option value="Medium">
+          Medium
+        </option>
+
+        <option value="High">
+          High
+        </option>
+
+        <option value="Critical">
+          Critical
+        </option>
+
+      </select>
+
+      <div className="modal-buttons">
+
+        <button
+          className="cancel-btn"
+          onClick={() =>
+            setShowTaskModal(false)
+          }
+        >
+          Cancel
+        </button>
+
+        <button
+          className="create-btn"
+          onClick={handleAddTask}
+        >
+          Add Task
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
+
+    </div>
+
+  
   )};

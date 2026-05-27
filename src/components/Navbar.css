@@ -116,3 +116,320 @@
 
   cursor: pointer;
 }
+
+/* RED NOTIFICATION BADGE */
+
+.dot {
+  position: absolute;
+
+  top: -4px;
+  right: -4px;
+
+  min-width: 18px;
+  height: 18px;
+
+  padding: 0 5px;
+
+  background: #ff4d4f;
+
+  border-radius: 999px;
+
+  color: white;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* NOTIFICATION WRAPPER */
+
+.notification-wrapper {
+  position: relative;
+  z-index: 1000;
+}
+
+/* DROPDOWN */
+
+.notification-dropdown {
+  position: absolute;
+
+  top: 58px;
+  right: 0;
+
+  width: 360px;
+
+  background: #08110d;
+
+  border: 1px solid #173126;
+
+  border-radius: 22px;
+
+  overflow: hidden;
+
+  z-index: 9999;
+
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* HEADER */
+
+.notification-header {
+  padding: 18px;
+
+  border-bottom: 1px solid #173126;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-header h3 {
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.notification-header span {
+  color: #4ade80;
+  font-size: 13px;
+}
+
+/* LIST */
+
+.notification-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* CARD */
+
+.notification-card {
+  display: flex;
+  gap: 14px;
+
+  padding: 16px;
+
+  cursor: pointer;
+
+  border-bottom: 1px solid #13261f;
+
+  transition: 0.2s ease;
+}
+
+.notification-card:hover {
+  background: #102019;
+}
+
+.notification-card.unread {
+  background: rgba(82, 183, 136, 0.08);
+}
+
+/* ICON */
+
+.notification-icon {
+  margin-top: 4px;
+}
+
+/* CONTENT */
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-top h4 {
+  color: white;
+  font-size: 14px;
+  margin: 0;
+}
+
+.notification-top span {
+  color: #8b9b94;
+  font-size: 11px;
+}
+
+.notification-content p {
+  color: #d1d5db;
+
+  font-size: 13px;
+
+  margin-top: 6px;
+
+  line-height: 1.4;
+}
+
+/* =========================
+   NOTIFICATION DROPDOWN
+========================= */
+
+.notification-wrapper {
+  position: relative;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+
+  width: 320px;
+
+  background: #0f1720;
+
+  border-radius: 18px;
+
+  border: 1px solid #243441;
+
+  box-shadow:
+    0 12px 30px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(255,255,255,0.02);
+
+  overflow: hidden;
+
+  z-index: 9999;
+}
+
+/* HEADER */
+
+.notification-header {
+  padding: 14px 16px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: white;
+
+  border-bottom: 1px solid rgba(216, 243, 220, 0.08);
+}
+
+/* LIST */
+
+.notification-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* CARD */
+
+.notification-card {
+  padding: 14px 16px;
+
+  border-bottom: 1px solid rgba(216, 243, 220, 0.05);
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.notification-card:hover {
+  background: rgba(216, 243, 220, 0.05);
+}
+
+.notification-card.unread {
+  background: rgba(82, 183, 136, 0.08);
+}
+
+/* TOP ROW */
+
+.notification-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notification-top h4 {
+  font-size: 14px;
+  color: white;
+}
+
+.notification-top span {
+  font-size: 11px;
+  color: #95a5a6;
+}
+
+/* MESSAGE */
+
+.notification-card p {
+  margin-top: 6px;
+
+  font-size: 13px;
+  line-height: 1.4;
+
+  color: #dce3de;
+}
+
+/* UNREAD COUNT */
+
+.dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 16px;
+  height: 16px;
+
+  padding: 0 4px;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  color: white;
+
+  background: red;
+
+  border-radius: 999px;
+}
+/* FOOTER */
+
+.notification-footer {
+  padding: 14px;
+
+  text-align: center;
+
+  color: #4ade80;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+  border-top: 1px solid #173126;
+}
+
+.notification-footer:hover {
+  background: #102019;
+}
+
+/* SCROLLBAR */
+
+.notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  background: #1d3a2f;
+  border-radius: 999px;
+}

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { db, auth } from "/src/assets/firebase";
+import { doc, getDoc, runTransaction } from "firebase/firestore";
 import "./Calendar.css";
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("month"); // 'month' or 'week'
+  const [deadlines, setDeadlines] = useState([]);
 
   const today = new Date();
 
@@ -93,21 +96,26 @@ export default function Calendar() {
       date.getFullYear() === today.getFullYear();
   };
 
-  // Mock events for UI demonstration
-  const getMockEvents = (date) => {
-    const day = date.getDate();
-    const events = [];
+  const fetchUserDeadlines = async () => {
+    if (!auth.currentUser) return [];
 
-    if (day === 5 || day === 15) {
-      events.push({ title: "Project Meeting", type: "event-blue" });
-    }
-    if (day === 12) {
-      events.push({ title: "Deadline Submission", type: "event-red" });
-    }
-    if (day === 22) {
-      events.push({ title: "Team Sync", type: "event-green" });
-    }
+    const userDoc = doc(db, "users", auth.currentUser.uid);
+    const docRef = await getDoc(userDoc);
 
+    if (docRef.exists()) {
+      const data = docRef.data();
+      return data.deadlines || [];
+    }
+    return [];
+  };
+
+  const getEvents = (day) => {
+    const events = deadlines
+      .filter(event => event.dueDate === day.toLocaleDateString('en-CA'))
+      .map(event => ({
+        title: (event.title + " : " + event.course),
+        type: event.type === "project" ? "event-green" : (event.type === "exam" ? "event-red" : "event-blue")
+      }));
     return events;
   };
 
@@ -118,7 +126,7 @@ export default function Calendar() {
     const visibleDays = viewMode === "month" ? days : days.slice(0, 7);
 
     return visibleDays.map((dayObj, index) => {
-      const events = getMockEvents(dayObj.date);
+      const events = getEvents(dayObj.date);
       return (
         <div
           key={index}
@@ -127,7 +135,10 @@ export default function Calendar() {
           <span className="cell-date">{dayObj.date.getDate()}</span>
           {events.map((ev, i) => (
             <div key={i} className={`calendar-event ${ev.type}`}>
-              {ev.title}
+              <div>
+                <span className="event-title">{ev.title} </span>
+                <span className="event-title">{ev.title} </span>
+              </div>
             </div>
           ))}
         </div>
@@ -152,6 +163,14 @@ export default function Calendar() {
   };
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  useEffect(() => {
+    const loadDeadlines = async () => {
+      const data = await fetchUserDeadlines();
+      setDeadlines(data);
+    };
+    loadDeadlines();
+  }, []);
 
   return (
     <div className="calendar-page">
