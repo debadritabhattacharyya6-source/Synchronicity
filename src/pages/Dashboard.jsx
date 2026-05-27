@@ -17,20 +17,23 @@ export default function Dashboard() {
   const getUsername = async () => {
     try {
       const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        const firstName = userData.firstName;
-        setNameOfCurrentUser(firstName);
+      if (docSnap.exists() && docSnap.data()?.firstName) {
+        setNameOfCurrentUser(docSnap.data().firstName);
+      } else {
+        const displayName = auth.currentUser?.displayName;
+        setNameOfCurrentUser(displayName ? displayName.split(" ")[0] : (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
       }
     }
     catch (err) {
-      console.error(err);
+      console.error("Dashboard database fetch error:", err);
+      const displayName = auth.currentUser?.displayName;
+      setNameOfCurrentUser(displayName ? displayName.split(" ")[0] : (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
     }
   }
   useEffect(() => {
     if(!auth.currentUser) return;
     getUsername()
-  });
+  }, []);
   const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {

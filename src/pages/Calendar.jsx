@@ -170,7 +170,7 @@ export default function Calendar() {
       setDeadlines(data);
     };
     loadDeadlines();
-  });
+  }, []);
 
   return (
     <div className="calendar-page">
