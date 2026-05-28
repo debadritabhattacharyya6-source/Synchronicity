@@ -32,7 +32,6 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        console.log(currentUser);
         setUser(currentUser);
         
         // Fast optimization: Unblock loading screen instantly!

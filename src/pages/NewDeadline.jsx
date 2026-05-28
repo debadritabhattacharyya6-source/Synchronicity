@@ -5,14 +5,12 @@ import { auth, db } from "/src/assets/firebase"
 import { doc, runTransaction, updateDoc } from "firebase/firestore";
 import '/src/components/Modal.css';
 
-export default function NewDeadline({ onCancel }) {
+export default function NewDeadline({ onCancel, onNext }) {
     const [deadlineName, setDeadlineName] = useState("");
     const [deadlineCourse, setDeadlineCourse] = useState('');
     const [deadlineType, setDeadlineType] = useState("");
     const [deadlineDate, setDeadlineDate] = useState(new Date().toLocaleDateString('en-CA'));
     const [deadlineTime, setDeadlineTime] = useState('');
-
-    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const getUrgency = () => {
         const today = new Date();
@@ -36,48 +34,20 @@ export default function NewDeadline({ onCancel }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const deadlineId = `${Date.now()}`;
         try {
-            const userDoc = doc(db, "users", auth.currentUser.uid);
-            await runTransaction(db, async (transation) => {
-                const docRef = await transation.get(userDoc);
-                if (!docRef.exists()) throw "User does not exist";
-                const existingDeadlines = docRef.data().deadlines || [];
-                const nextId = existingDeadlines.length > 0
-                    ? Math.max(...existingDeadlines.map(o => o.id || 0)) + 1
-                    : 1;
-                const updatedItem = {
-                    id: nextId,
-                    title: deadlineName,
-                    course: deadlineCourse,
-                    type: deadlineType,
-                    dueDate: deadlineDate,
-                    time: deadlineTime,
-                    urgency: getUrgency(),
-                    progress: 0
-                }
-                const newDeadlineArray = [...existingDeadlines, updatedItem];
-                transation.update(userDoc, { deadlines: newDeadlineArray });
-            });
-            setIsSubmitted(true);
+            const updatedItem = {
+                title: deadlineName,
+                course: deadlineCourse,
+                type: deadlineType,
+                dueDate: deadlineDate,
+                time: deadlineTime,
+                urgency: getUrgency(),
+                progress: 0
+            }
+            onNext(updatedItem);
         } catch (err) {
             console.error(err);
         }
-    }
-
-    if (isSubmitted) {
-        return createPortal((
-            <div className="modal-overlay" onClick={onCancel}>
-                <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-                    <div className='modal-title'>
-                        <h2>Deadline Added</h2>
-                    </div>
-                    <div className='modal-buttons'>
-                        <button onClick={onCancel} className='modal-cancel'>Done</button>
-                    </div>
-                </div>
-            </div>
-        ), document.getElementById('root-portal'));
     }
 
     return createPortal((
@@ -95,7 +65,7 @@ export default function NewDeadline({ onCancel }) {
         }} onClick={onCancel}>
             <div className='auth-container' style={{ width: "500px", maxWidth: "95%", margin: "auto" }} onClick={(e) => e.stopPropagation()}>
                 <h2 className='auth-title'>Enter details</h2>
-                <form onSubmit={handleSubmit} className='auth-form'>
+                <form className='auth-form' onSubmit={handleSubmit}>
                     <div className='input-group'>
                         <label htmlFor='deadlineName'>Title</label>
                         <input
@@ -180,7 +150,7 @@ export default function NewDeadline({ onCancel }) {
                         </div>
                     </div>
                     <button type="submit" className="auth-submit" style={{ marginTop: "20px" }}>
-                        SAVE DEADLINE
+                        EDIT CHECKPOINTS
                     </button>
                 </form>
             </div>

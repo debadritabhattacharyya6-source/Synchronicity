@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { Calendar, Clock, AlertCircle, FileText, CheckCircle, Search, Filter } from 'lucide-react';
 import NewDeadline from './NewDeadline';
+import Checkpoints from './Checkpoints';
+import CompleteCheckpoints from './CompleteCheckpoints';
 import Modal from '../components/Modal';
 import './Deadlines.css';
 import { auth, db } from '/src/assets/firebase'
-import { doc, getDoc, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, runTransaction, onSnapshot } from 'firebase/firestore';
 
 export default function Deadlines({ theme }) {
   const [userData, setUserData] = useState(null);
   const [filter, setFilter] = useState('all'); // all, assignment, exam, project
   const [newDeadline, setNewDeadline] = useState(false);
-  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [newCheckpoints, setNewCheckpoints] = useState(false);
+  const [confirmCompleteVisible, setConfirmCompleteVisible] = useState(false);
   const [deadline, setDeadline] = useState(null);
+  const [tempData, setTempData] = useState(null);
 
   const getUserdata = async () => {
     try {
@@ -28,7 +32,15 @@ export default function Deadlines({ theme }) {
 
   useEffect(() => {
     if (auth.currentUser) {
-      getUserdata();
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
+      }, (err) => {
+        console.error("Error listening to user data:", err);
+      });
+      return () => unsubscribe();
     }
   }, []);
 
@@ -75,28 +87,26 @@ export default function Deadlines({ theme }) {
 
         transaction.update(userDoc, { deadlines: newDeadlineArray });
       });
-      setConfirmDeleteVisible(false);
+      setConfirmCompleteVisible(false);
     }
     catch (err) {
       console.error(err);
     }
   };
 
-  const confirmDelete = (deadline) => {
-    setConfirmDeleteVisible(true);
+  const confirmComplete = (deadline) => {
+    setConfirmCompleteVisible(true);
     setDeadline(deadline);
   };
 
-  if (confirmDeleteVisible) {
-    return (<Modal
-      modalVisible={confirmDeleteVisible}
-      title="Are you sure?"
-      onConfirm={() => onComplete(deadline)}
-      onCancel={() => setConfirmDeleteVisible(false)}
-      confirmText='Delete'
-    >
-      <p>This Deadline will be deleted</p>
-    </Modal>);
+  const transition = (data) => {
+    setTempData(data);
+    setNewDeadline(false);
+    setNewCheckpoints(true);
+  };
+
+  if (confirmCompleteVisible) {
+    return (<CompleteCheckpoints onCancel={() => setConfirmCompleteVisible(false)} deadline={deadline}></CompleteCheckpoints>);
   }
 
   return (
@@ -112,7 +122,8 @@ export default function Deadlines({ theme }) {
             <input type="text" placeholder="Search deadlines..." />
           </div>
           <button className="add-deadline-btn" onClick={enterNewDeadline}>+ New Deadline</button>
-          {newDeadline && <NewDeadline onCancel={() => setNewDeadline(false)} />}
+          {newDeadline && <NewDeadline onCancel={() => setNewDeadline(false)} onNext={transition} />}
+          {newCheckpoints && <Checkpoints data={tempData} onCancel={() => setNewCheckpoints(false)} />}
         </div>
       </div>
 
@@ -163,7 +174,7 @@ export default function Deadlines({ theme }) {
                 {getTypeIcon(deadline.type)}
                 {deadline.type.charAt(0).toUpperCase() + deadline.type.slice(1)}
               </span>
-              <button className="complete-btn" title="Mark as complete" onClick={()=>confirmDelete(deadline)}>
+              <button className="complete-btn" title="Mark Checkpoints" onClick={() => confirmComplete(deadline)}>
                 <CheckCircle size={20} />
               </button>
             </div>
