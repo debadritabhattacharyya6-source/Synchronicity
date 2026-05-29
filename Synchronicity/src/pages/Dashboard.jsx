@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
-
+import HelpBot from '../components/helpbot';
 export default function Dashboard() {
   // Dynamic Mock Data
   const [stats, setStats] = useState({
@@ -180,6 +180,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <helpbot />
     </div>
   );
 }
