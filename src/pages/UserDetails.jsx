@@ -3,7 +3,7 @@ import "./Auth.css";
 import logo from "/src/assets/syncspace-logo.png";
 import { createPortal } from 'react-dom';
 import { auth, db } from "/src/assets/firebase"
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,10 +18,10 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
 
   const showError = () => toast.error("Something went wrong!");
 
-  const updateDetails = async () => {
+  const updateDetails = () => {
     try {
       const userDoc = doc(db, "users", auth.currentUser.uid);
-      updateDoc(userDoc, {
+      setDoc(userDoc, {
         firstName: firstName,
         lastName: lastName,
         middleName: middleName,
@@ -30,7 +30,7 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
         email: email,
         phone: phone,
         deadlines: []
-      });
+      }, { merge: true }).catch(err => console.error("Background setDoc failed:", err));
       return true;
     } catch (err) {
       console.log(err);
@@ -38,14 +38,62 @@ export default function UserDetails({ onComplete, first_name = "", last_name = "
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSkip = async () => {
+    const finalFirstName = firstName || (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User");
+    const finalLastName = lastName || "Student";
+    const finalUniversity = university || "SyncSpace University";
+    const finalBranch = branch || "Computer Science";
+    const finalEmail = email || auth.currentUser?.email || "guest@syncspace.com";
+    const finalPhone = phone || "1234567890";
+
+    try {
+      const userDoc = doc(db, "users", auth.currentUser.uid);
+      await setDoc(userDoc, {
+        firstName: finalFirstName,
+        lastName: finalLastName,
+        middleName: middleName,
+        university: finalUniversity,
+        branch: finalBranch,
+        email: finalEmail,
+        phone: finalPhone,
+        deadlines: []
+      }, { merge: true });
+
+      const updatedData = {
+        firstName: finalFirstName,
+        lastName: finalLastName,
+        middleName: middleName,
+        university: finalUniversity,
+        branch: finalBranch,
+        email: finalEmail,
+        phone: finalPhone,
+        deadlines: []
+      };
+      onComplete(updatedData);
+    } catch (err) {
+      console.log("Error skipping profile creation:", err);
+      showError();
+    }
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const success = await updateDetails();
+    const success = updateDetails();
     if (!success) {
       showError();
       return;
     }
-    onComplete();
+    const updatedData = {
+      firstName: firstName,
+      lastName: lastName,
+      middleName: middleName,
+      university: university,
+      branch: branch,
+      email: email,
+      phone: phone,
+      deadlines: []
+    };
+    onComplete(updatedData);
   };
 
   return createPortal((

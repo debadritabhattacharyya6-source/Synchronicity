@@ -26,6 +26,7 @@ function App() {
   const [authMode, setAuthMode] = useState("login"); // 'login' or 'signup'
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -33,23 +34,45 @@ function App() {
       if (currentUser) {
         console.log(currentUser);
         setUser(currentUser);
-        setLoading(false); // Unblock instantly!
+        
+        // Fast optimization: Unblock loading screen instantly!
+        setLoading(false);
+        
+        // Fast optimization: Check local storage cache
+        const isCompletedCache = localStorage.getItem(`syncspace_profile_completed_${currentUser.uid}`) === "true";
+        if (isCompletedCache) {
+          setCurrentScreen("app");
+        } else {
+          // If not in cache, default to app to avoid delay. The background fetch will redirect if needed.
+          setCurrentScreen("app");
+        }
         
         try {
           const docSnap = await getDoc(doc(db, "users", currentUser.uid));
           if (docSnap.exists() && docSnap.data()?.firstName) {
+            setProfileData(docSnap.data());
+            localStorage.setItem(`syncspace_profile_completed_${currentUser.uid}`, "true");
             setCurrentScreen("app");
           } else {
-            setCurrentScreen("userdetails");
+            setProfileData(null);
+            localStorage.removeItem(`syncspace_profile_completed_${currentUser.uid}`);
+            // Prevent background fetch race conditions from resetting screen once user completed signup details
+            setCurrentScreen(prev => prev === "app" ? "app" : "userdetails");
           }
         } catch (err) {
           console.error("Error fetching user data:", err);
-          setCurrentScreen("app");
+          // If we had a cache hit, we are already in the app, don't kick them out on a network failure!
+          if (!isCompletedCache) {
+            setProfileData(null);
+            setCurrentScreen(prev => prev === "app" ? "app" : "userdetails"); // Safe default on database errors
+          }
         }
       }
       else{
-        setLoading(false);
+        setUser(null);
+        setProfileData(null);
         setCurrentScreen("intro");
+        setLoading(false);
       }
     });
 
@@ -103,15 +126,32 @@ function App() {
       if (isSignup) {
         setCurrentScreen("userdetails");
       } else {
+        if (auth.currentUser) {
+          localStorage.setItem(`syncspace_profile_completed_${auth.currentUser.uid}`, "true");
+        }
         setCurrentScreen("app");
       }
     }} />;
   }
 
   if (currentScreen === "userdetails") {
-    return <UserDetails onComplete={() => {
-      setCurrentScreen("app");
-    }} />;
+    const currentUser = auth.currentUser;
+    const prefilledFirstName = currentUser?.displayName ? currentUser.displayName.split(" ")[0] : "";
+    const prefilledLastName = currentUser?.displayName ? currentUser.displayName.split(" ").slice(1).join(" ") : "";
+    const prefilledEmail = currentUser?.email || "";
+
+    return <UserDetails 
+      onComplete={(updatedData) => {
+        if (updatedData && auth.currentUser) {
+          localStorage.setItem(`syncspace_profile_completed_${auth.currentUser.uid}`, "true");
+        }
+        setProfileData(updatedData);
+        setCurrentScreen("app");
+      }} 
+      first_name={prefilledFirstName}
+      last_name={prefilledLastName}
+      mail={prefilledEmail}
+    />;
   }
 
   // 👉 THEN SHOW MAIN APP
@@ -123,12 +163,12 @@ function App() {
         <Navbar />
 
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Dashboard profileData={profileData} />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/deadlines" element={<Deadlines theme={theme} />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/collaboration" element={<Collaborations />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile" element={<Profile profileData={profileData} setProfileData={setProfileData} />} />
           <Route
             path="/settings"
             element={<Settings theme={theme} setTheme={setTheme} />}

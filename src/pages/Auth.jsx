@@ -48,13 +48,17 @@ export default function Auth({ mode, setMode, onComplete }) {
   const signUpWithGoogle = async () => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
-      // Run document creation in background (don't block the UI!)
-      createUserDocument(userCredential).catch(err => console.error("Error creating user doc in background:", err));
-      // Open the website instantly!
-      onComplete(false);
+      const docSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (docSnap.exists()) {
+        onComplete(false);
+        return;
+      }
+      else {
+        createUserDocument(userCredential);
+        onComplete(true);
+      }
     } catch (err) {
-      console.error("Google Authentication failed:", err);
-      alert("Sign in with Google failed: " + (err.message || err));
+      console.error(err);
     }
   };
   const handleSubmit = async (e) => {
