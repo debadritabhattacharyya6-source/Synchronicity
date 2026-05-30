@@ -123,7 +123,7 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
                         const isLast = index === deadlineToBeDeleted.checkpoints.length - 1;
 
                         if (isLast) {
-                            return { ...checkpoint, completed: true };
+                            return { ...checkpoint, completed: true, completedAt: new Date().toISOString('en-CA') };
                         }
                         return checkpoint;
                     });
