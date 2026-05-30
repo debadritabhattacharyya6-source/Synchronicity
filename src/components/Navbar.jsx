@@ -36,11 +36,9 @@ export default function Topbar() {
           try {
             const [year, month, day] = deadline.dueDate.split('-').map(Number);
 
-            // 3. Create target date normalized to absolute midnight
             const deadlineMidnight = new Date(year, month - 1, day);
             deadlineMidnight.setHours(0, 0, 0, 0);
-
-            // 4. Calculate day difference
+            
             const diffTime = deadlineMidnight.getTime() - todayMidnight.getTime();
             const daysRemaining = Math.round(diffTime / (1000 * 60 * 60 * 24));
             if (daysRemaining === 0 || daysRemaining === 1) {
