@@ -123,7 +123,7 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
                         const isLast = index === deadlineToBeDeleted.checkpoints.length - 1;
 
                         if (isLast) {
-                            return { ...checkpoint, completed: true, completedAt: new Date().toISOString('en-CA') };
+                            return { ...checkpoint, completed: true };
                         }
                         return checkpoint;
                     });
@@ -133,7 +133,8 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
                         completed: true,
                         checkpoints: updatedCheckpoints,
                         progress: 100,
-                        urgency: "low"
+                        urgency: "low",
+                        completedAt: new Date().toISOString().split('T')[0]
                     }
                     newCompletedDeadlines.push(updatedItem);
                 }
