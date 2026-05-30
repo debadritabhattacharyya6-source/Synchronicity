@@ -1,7 +1,9 @@
 import { Bell, Search, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
 
+import { auth, db } from "../assets/firebase";
 import "./Navbar.css";
 
 export default function Topbar() {
@@ -12,35 +14,72 @@ export default function Topbar() {
     useState(false);
 
   const [notifications, setNotifications] =
-    useState([
-      {
-        id: 1,
-        title: "AI Project Proposal",
-        message:
-          "Deadline is within 12 hours",
-        time: "5m ago",
-        read: false,
-      },
+    useState([]);
+  useEffect(() => {
+    if (!auth.currentUser) return;
 
-      {
-        id: 2,
-        title: "Midterm Exam",
-        message:
-          "Exam starts tomorrow morning",
-        time: "20m ago",
-        read: false,
-      },
+    const userRef = doc(
+      db,
+      "users",
+      auth.currentUser.uid
+    );
 
-      {
-        id: 3,
-        title: "Task Completed",
-        message:
-          "You completed HCI Report",
-        time: "1h ago",
-        read: true,
-      },
-    ]);
+    const unsubscribe = onSnapshot(
+      userRef,
+      (snap) => {
+        if (!snap.exists()) return;
 
+        const userData = snap.data();
+
+        const deadlines =
+          userData.deadlines || [];
+
+        const generatedNotifications = [];
+
+        deadlines.forEach((deadline) => {
+          try {
+            const deadlineTime =
+              new Date(
+                `${deadline.dueDate}T${deadline.time}`
+              );
+
+            const now = new Date();
+
+            const hoursRemaining =
+              (deadlineTime - now) /
+              (1000 * 60 * 60);
+
+            if (
+              hoursRemaining > 0 &&
+              hoursRemaining <= 24
+            ) {
+              generatedNotifications.push({
+                id: deadline.id,
+
+                title: "Upcoming Deadline",
+
+                message: `${deadline.title} is due in ${Math.ceil(
+                  hoursRemaining
+                )} hour(s)`,
+
+                time: deadline.dueDate,
+
+                read: false,
+              });
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        });
+
+        setNotifications(
+          generatedNotifications
+        );
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
   const unreadCount = notifications.filter(
     (n) => !n.read
   ).length;
@@ -98,46 +137,57 @@ export default function Topbar() {
           {showNotifications && (
             <div className="notification-dropdown">
               <div className="notification-header">
-                Notifications
+                <h3>Notifications</h3>
+
+                <span>
+                  {notifications.length} unread
+                </span>
               </div>
-
               <div className="notification-list">
-                {notifications.map(
+                {notifications.length === 0 ? (
+                <div
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                  }}
+                >
+                  No Notifications
+                </div>
+                ) : notifications.map(
                   (notification) => (
-                    <div
-                      key={notification.id}
-                      className={`notification-card ${
-                        !notification.read
-                          ? "unread"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        markAsRead(
-                          notification.id
-                        )
+                <div
+                  key={notification.id}
+                  className={`notification-card ${!notification.read
+                      ? "unread"
+                      : ""
+                    }`}
+                  onClick={() =>
+                    markAsRead(
+                      notification.id
+                    )
+                  }
+                >
+                  <div className="notification-top">
+                    <h4>
+                      {
+                        notification.title
                       }
-                    >
-                      <div className="notification-top">
-                        <h4>
-                          {
-                            notification.title
-                          }
-                        </h4>
+                    </h4>
 
-                        <span>
-                          {
-                            notification.time
-                          }
-                        </span>
-                      </div>
+                    <span>
+                      {
+                        notification.time
+                      }
+                    </span>
+                  </div>
 
-                      <p>
-                        {
-                          notification.message
-                        }
-                      </p>
-                    </div>
-                  )
+                  <p>
+                    {
+                      notification.message
+                    }
+                  </p>
+                </div>
+                )
                 )}
               </div>
             </div>
