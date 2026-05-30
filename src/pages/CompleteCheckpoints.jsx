@@ -1,19 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { SquarePen } from 'lucide-react';
 import './Auth.css';
 import { auth, db } from "/src/assets/firebase"
-import { doc, runTransaction, updateDoc } from "firebase/firestore";
+import { doc, runTransaction, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import '/src/components/Modal.css';
 import Modal from '../components/Modal';
+import EditCheckpoints from './EditCheckpoints';
+import './deadlines.css';
 
 export default function CompleteCheckpoints({ onCancel, deadline: initialDeadline }) {
     const [deadline, setDeadline] = useState(initialDeadline);
     const [isCompleteVisible, setIsCompleteVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [userData, setUserData] = useState(null);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                if (!auth.currentUser) {
+                    setLoading(false);
+                    return;
+                }
+
+                const userDoc = doc(db, "users", auth.currentUser.uid);
+                const docSnap = await getDoc(userDoc);
+
+                if (docSnap.exists()) {
+                    setUserData(docSnap.data());
+                    setDeadline(docSnap.data().deadlines.filter((deadline) => deadline.id === initialDeadline.id)[0]);
+                } else {
+                    console.log("User document not found");
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    });
+
+    const [editCheckpointsVisible, setEditCheckpointsVisible] = useState(false);
 
     const handleToggle = async (deadlineId, checkpointId) => {
         try {
             setDeadline((prevDeadline) => {
-                const updatedCheckpoints = prevDeadline.checkpoints.map((checkpoint) => {
+                const updatedCheckpoints = prevDeadline.checkpoints.map((checkpoint, index) => {
                     if (checkpoint.id !== checkpointId) return checkpoint;
                     return {
                         ...checkpoint,
@@ -83,6 +117,7 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
                 const newDeadlineArray = existingDeadlines.filter((item) => item.id !== idToBeDeleted);
                 const deadlineToBeDeleted = existingDeadlines.find((item) => item.id === idToBeDeleted);
                 const newCompletedDeadlines = [...completedDeadlines];
+
                 if (deadlineToBeDeleted) {
                     const updatedCheckpoints = deadlineToBeDeleted.checkpoints.map((checkpoint, index) => {
                         const isLast = index === deadlineToBeDeleted.checkpoints.length - 1;
@@ -129,6 +164,18 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
         </Modal>);
     }
 
+    if (loading) return <div>Loading Profile Data...</div>;
+    if (!userData) return <div>No user profile found.</div>;
+
+    const handleEditToggle = () => {
+        setEditCheckpointsVisible(true);
+    };
+
+    if (editCheckpointsVisible) {
+        const deadlineData = userData.deadlines.filter((deadline) => deadline.id === initialDeadline.id)[0];
+        return (<EditCheckpoints data={deadlineData} onCancel={() => setEditCheckpointsVisible(false)} />);
+    }
+
     return createPortal((
         <div className='auth-page' style={{
             position: 'fixed',
@@ -144,7 +191,15 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
         }} onClick={onCancel}>
             <div className='auth-container' style={{ width: "500px", maxWidth: "95%", margin: "auto" }} onClick={(e) => e.stopPropagation()}>
                 <fieldset>
-                    <legend className='auth-title' align="center">Checkpoints</legend>
+                    <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "14px"
+                    }}>
+                        <legend className='auth-title' align="center" style={{ marginBottom: "0px" }}>Checkpoints</legend>
+                        <SquarePen className='complete-btn' style={{ width: "100%", height: "100%", borderRadius: "20%" }} onClick={handleEditToggle} />
+                    </div>
                     {deadline.checkpoints.map((checkpoint, index) => {
                         const isCompleteCheckpoint = index === deadline.checkpoints.length - 1;
                         const isLastCheckpoint = isCompleteCheckpoint && index != 0;
