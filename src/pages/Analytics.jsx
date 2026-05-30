@@ -9,10 +9,12 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip
 } from "recharts";
 
-export default function DeadlineGraph() {
+import "./Analytics.css";
+
+export default function CompletedDeadlinesGraph() {
   const [graphData, setGraphData] = useState([]);
 
   useEffect(() => {
@@ -24,67 +26,123 @@ export default function DeadlineGraph() {
       auth.currentUser.uid
     );
 
-    const unsubscribe = onSnapshot(userRef, (snap) => {
-      if (!snap.exists()) return;
+    const unsubscribe = onSnapshot(
+      userRef,
+      (snap) => {
+        if (!snap.exists()) return;
 
-      const userData = snap.data();
+        const userData = snap.data();
 
-      const deadlines = userData.deadlines || [];
+        const completedDeadlines =
+          userData.completedDeadlines || [];
 
-      const grouped = {};
+        const groupedData = {};
 
-      deadlines.forEach((deadline) => {
-        const date = deadline.dueDate;
+        completedDeadlines.forEach((deadline) => {
+          if (!deadline.completedAt) return;
 
-        if (!grouped[date]) {
-          grouped[date] = 0;
-        }
+          const date = new Date(
+            deadline.completedAt
+          )
+            .toISOString()
+            .split("T")[0];
 
-        grouped[date]++;
-      });
+          groupedData[date] =
+            (groupedData[date] || 0) + 1;
+        });
 
-      const chartData = Object.keys(grouped)
-        .sort()
-        .map((date) => ({
-          date,
-          count: grouped[date],
-        }));
+        const formattedData = Object.keys(
+          groupedData
+        )
+          .sort()
+          .map((date) => ({
+            date,
+            completed: groupedData[date]
+          }));
 
-      setGraphData(chartData);
-    });
+        setGraphData(formattedData);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
 
+  const CustomTooltip = ({
+    active,
+    payload,
+    label
+  }) => {
+    if (
+      active &&
+      payload &&
+      payload.length
+    ) {
+      return (
+        <div className="custom-tooltip">
+          <p>{label}</p>
+          <p>
+            Completed:{" "}
+            {payload[0].value}
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "320px",
-        background: "#1f2b4a",
-        borderRadius: "12px",
-        padding: "20px",
-      }}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={graphData}>
-          <CartesianGrid strokeDasharray="3 3" />
+    <div className="graph-card">
+      <div className="graph-header">
+        <div>
+          <h3 className="graph-title">
+            Completed Deadlines
+          </h3>
 
-          <XAxis dataKey="date" />
+          <p className="graph-subtitle">
+            Daily completion trend
+          </p>
+        </div>
+      </div>
 
-          <YAxis allowDecimals={false} />
+      <div className="graph-container">
+        {graphData.length === 0 ? (
+          <div className="graph-empty">
+            No completed deadlines yet
+          </div>
+        ) : (
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+          >
+            <AreaChart data={graphData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+              />
 
-          <Tooltip />
+              <XAxis
+                dataKey="date"
+              />
 
-          <Area
-            type="monotone"
-            dataKey="count"
-            stroke="#38d9a9"
-            fill="#38d9a9"
-            fillOpacity={0.4}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+              <YAxis
+                allowDecimals={false}
+              />
+
+              <Tooltip
+                content={<CustomTooltip />}
+              />
+
+              <Area
+                type="monotone"
+                dataKey="completed"
+                stroke="#52b788"
+                fill="#52b788"
+                fillOpacity={0.35}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </div>
     </div>
   );
 }
