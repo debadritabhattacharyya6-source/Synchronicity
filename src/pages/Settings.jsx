@@ -10,6 +10,10 @@ export default function Settings({ theme, setTheme }) {
   const sections = ["Appearance", "FAQ"];
 
   const faqs = [
+     {
+      q: "How does the Stress heatmap work?",
+      a: "Red shows more than three on day deadlines,yellow for two,green for one and blank shows nothing on due."
+    },
     {
       q: "How do I change theme?",
       a: "Use the toggle above to switch between light and dark mode."
