@@ -1,346 +1,352 @@
 import { useEffect, useState } from "react";
 import "./Collaborations.css";
 import { db } from "../assets/firebase";
+import { Trash2 } from "lucide-react";
 import {
   collection,
   getDocs,
   doc,
   setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 
 export default function CollaborationPage() {
-
   const [groups, setGroups] = useState([]);
-  const [workspaceTasks, setWorkspaceTasks] =
-  useState({});
+  const [workspaceTasks, setWorkspaceTasks] = useState({});
 
-  const [activeWorkspace, setActiveWorkspace] =
-  useState(null);
+  const [activeWorkspace, setActiveWorkspace] = useState(null);
 
-const [showModal, setShowModal]= useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-const [showInviteModal, setShowInviteModal] =
-  useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
-const[newTeam, setNewTeam]=useState({
-    title:"",
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
+  const [completedGroup, setCompletedGroup] = useState(null);
+
+  const [newTeam, setNewTeam] = useState({
+    title: "",
     members: "",
-    deadline:"",
-    
-})
-useEffect(() => {
+    deadline: "",
+  });
+  useEffect(() => {
+    if (!activeWorkspace) return;
 
-  const fetchGroups = async () => {
+    const workspace = workspaceTasks[activeWorkspace];
 
-    try {
+    if (!workspace) return;
 
-      const querySnapshot =
-        await getDocs(
-          collection(db, "groups")
-        );
+    const totalTasks =
+      (workspace.todo?.length || 0) +
+      (workspace.inprogress?.length || 0) +
+      (workspace.review?.length || 0) +
+      (workspace.completed?.length || 0);
 
-      const loadedGroups = [];
+    if (totalTasks === 0) return;
 
-      querySnapshot.forEach((doc) => {
+    const allCompleted = workspace.completed?.length === totalTasks;
 
-        loadedGroups.push(doc.data());
+    if (allCompleted) {
+      const group = groups.find((g) => g.code === activeWorkspace);
 
-      });
+      setCompletedGroup(group);
 
-      setGroups(loadedGroups);
-
-    } catch (error) {
-
-      console.log(error);
-      alert(error);
+      setShowCompletionModal(true);
     }
-  };
+  }, [workspaceTasks, activeWorkspace, groups]);
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "groups"));
 
-  fetchGroups();
+        const loadedGroups = [];
 
-}, []);
-const tasks =
-  workspaceTasks[activeWorkspace] || {
+        querySnapshot.forEach((doc) => {
+          loadedGroups.push(doc.data());
+        });
+
+        setGroups(loadedGroups);
+      } catch (error) {
+        console.log(error);
+        alert(error);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+  const tasks = workspaceTasks[activeWorkspace] || {
     todo: [],
     inprogress: [],
     review: [],
     completed: [],
   };
 
-  const [showTaskModal, setShowTaskModal] =
-  useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
-const [newTask, setNewTask] =
-  useState({
+  const [newTask, setNewTask] = useState({
     title: "",
     assigned: "",
     due: "",
     priority: "",
   });
   const handleAddTask = async () => {
+    if (
+      !newTask.title ||
+      !newTask.assigned ||
+      !newTask.due ||
+      !newTask.priority
+    ) {
+      return;
+    }
 
-  if (
-    !newTask.title ||
-    !newTask.assigned ||
-    !newTask.due ||
-    !newTask.priority
-  ) {
-    return;
-  }
+    const updatedTasks = {
+      ...workspaceTasks,
 
-  const updatedTasks = {
+      [activeWorkspace]: {
+        ...(workspaceTasks[activeWorkspace] || {
+          todo: [],
+          inprogress: [],
+          review: [],
+          completed: [],
+        }),
 
-    ...workspaceTasks,
+        todo: [
+          ...(workspaceTasks[activeWorkspace]?.todo || []),
+          {
+            ...newTask,
+          },
+        ],
+      },
+    };
 
-    [activeWorkspace]: {
-
-      ...workspaceTasks[activeWorkspace],
-
-      todo: [
-  ...(workspaceTasks[activeWorkspace]|| {
-  todo: [],
-  inprogress: [],
-  review: [],
-  completed: [],
-}),
-
-        {
-          ...newTask,
-        },
-      ],
-    },
-  };
-
-  setWorkspaceTasks(updatedTasks);
-
-  try {
-
-    await setDoc(
-
-      doc(
-        db,
-        "tasks",
-        foundGroup.code
-      ),
-
-      updatedTasks[
-        foundGroup.code
-      ]
-
-    );
-
-  } catch (error) {
-
-    console.log(error);
-    alert(error.message);
-  }
-
-  setNewTask({
-    title: "",
-    assigned: "",
-    due: "",
-    priority: "",
-  });
-
-  setShowTaskModal(false);
-};
-useEffect(() => {
-
-  const fetchTasks = async () => {
+    setWorkspaceTasks(updatedTasks);
 
     try {
+      await setDoc(
+        doc(db, "tasks", activeWorkspace),
 
-      const querySnapshot =
-        await getDocs(
-          collection(db, "tasks")
-        );
-
-      const loadedTasks = {};
-
-      querySnapshot.forEach((doc) => {
-
-        loadedTasks[doc.id] =
-          doc.data();
-
-      });
-
-      setWorkspaceTasks(
-        loadedTasks
+        updatedTasks[activeWorkspace],
       );
-
     } catch (error) {
-
       console.log(error);
       alert(error.message);
+    }
 
+    setNewTask({
+      title: "",
+      assigned: "",
+      due: "",
+      priority: "",
+    });
+
+    setShowTaskModal(false);
+  };
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "tasks"));
+
+        const loadedTasks = {};
+
+        querySnapshot.forEach((doc) => {
+          loadedTasks[doc.id] = doc.data();
+        });
+
+        setWorkspaceTasks(loadedTasks);
+      } catch (error) {
+        console.log(error);
+        alert(error.message);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  const [joinCode, setJoinCode] = useState("");
+
+  const [showJoinModal, setShowJoinModal] = useState(false);
+
+  const handleJoinWorkspace = () => {
+    const foundGroup = groups.find((group) => group.code === joinCode);
+
+    if (!foundGroup) {
+      alert("Invalid workspace code");
+      return;
+    }
+
+    setActiveWorkspace(foundGroup.title);
+
+    setShowJoinModal(false);
+
+    setJoinCode("");
+  };
+
+  const calculateProgress = (workspaceName) => {
+    const workspace = workspaceTasks[workspaceName];
+
+    if (!workspace) return 0;
+
+    const totalTasks =
+      (workspace.todo?.length || 0) +
+      (workspace.inprogress?.length || 0) +
+      (workspace.review?.length || 0) +
+      (workspace.completed?.length || 0);
+
+    if (totalTasks === 0) return 0;
+
+    return Math.round((workspace.completed.length / totalTasks) * 100);
+  };
+
+  const getProgressColor = (progress) => {
+    if (progress >= 70) {
+      return {
+        color: "#4ade80",
+        bg: "rgba(34,197,94,0.12)",
+        border: "rgba(34,197,94,0.22)",
+        gradient: "linear-gradient(90deg,#22c55e,#4ade80)",
+      };
+    }
+
+    if (progress >= 40) {
+      return {
+        color: "#fde68a",
+        bg: "rgba(250,204,21,0.12)",
+        border: "rgba(250,204,21,0.22)",
+        gradient: "linear-gradient(90deg,#facc15,#fde68a)",
+      };
+    }
+
+    return {
+      color: "#fca5a5",
+      bg: "rgba(239,68,68,0.12)",
+      border: "rgba(239,68,68,0.22)",
+      gradient: "linear-gradient(90deg,#ef4444,#f87171)",
+    };
+  };
+
+  const generateCode = () => {
+    const random = Math.floor(1000 + Math.random() * 9000);
+
+    return `SYNC-${random}`;
+  };
+
+  const handleCreateTeam = async () => {
+    if (!newTeam.title || !newTeam.members || !newTeam.deadline) {
+      alert("Fill all fields");
+      return;
+    }
+
+    const code = generateCode();
+
+    const createdTeam = {
+      title: newTeam.title,
+      members: Number(newTeam.members),
+      deadline: newTeam.deadline,
+      progress: 0,
+      code,
+    };
+
+    const emptyTasks = {
+      todo: [],
+      inprogress: [],
+      review: [],
+      completed: [],
+    };
+
+    try {
+      await setDoc(doc(db, "groups", code), createdTeam);
+
+      await setDoc(doc(db, "tasks", code), emptyTasks);
+
+      setGroups((prev) => [...prev, createdTeam]);
+
+      setWorkspaceTasks((prev) => ({
+        ...prev,
+        [code]: emptyTasks,
+      }));
+
+      setActiveWorkspace(code);
+
+      setNewTeam({
+        title: "",
+        members: "",
+        deadline: "",
+      });
+
+      setShowModal(false);
+    } catch (error) {
+      console.log(error);
+      alert(error.message);
     }
   };
 
-  fetchTasks();
-
-}, []);
- 
-const [joinCode, setJoinCode] =
-  useState("");
-
-const [showJoinModal, setShowJoinModal] =
-  useState(false);
-
-  const handleJoinWorkspace = () => {
-
-  const foundGroup =
-    groups.find(
-      group =>
-        group.code === joinCode
+  const handleDeleteGroup = async (groupCode) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this study group?",
     );
 
-  if (!foundGroup) {
-    alert("Invalid workspace code");
-    return;
-  }
+    if (!confirmDelete) return;
 
-  setActiveWorkspace(
-    foundGroup.title
-  );
+    try {
+      await deleteDoc(doc(db, "groups", groupCode));
 
-  setShowJoinModal(false);
+      await deleteDoc(doc(db, "tasks", groupCode));
 
-  setJoinCode("");
-};
+      setGroups((prev) => prev.filter((group) => group.code !== groupCode));
 
-const calculateProgress = (workspaceName) => {
+      setWorkspaceTasks((prev) => {
+        const updated = { ...prev };
 
-  const workspace =
-    workspaceTasks[workspaceName];
+        delete updated[groupCode];
 
-  if (!workspace) return 0;
+        return updated;
+      });
 
-  const totalTasks =
-    (workspace.todo?.length||0) +
-    (workspace.inprogress?.length||0) +
-    (workspace.review?.length||0) +
-    (workspace.completed?.length||0);
+      if (activeWorkspace === groupCode) {
+        setActiveWorkspace(null);
+      }
+    } catch (error) {
+      console.log(error);
+      alert(error.message);
+    }
+  };
+  const moveTask = async (task, fromColumn, toColumn) => {
+    const workspace = workspaceTasks[activeWorkspace];
 
-  if (totalTasks === 0) return 0;
+    if (!workspace) return;
 
-  return Math.round(
-    (workspace.completed.length /
-      totalTasks) * 100
-  );
-};
+    const updatedWorkspace = {
+      ...workspace,
 
-const getProgressColor = (progress) => {
-  if (progress >= 70) {
-    return {
-      color: "#4ade80",
-      bg: "rgba(34,197,94,0.12)",
-      border: "rgba(34,197,94,0.22)",
-      gradient: "linear-gradient(90deg,#22c55e,#4ade80)",
+      [fromColumn]: workspace[fromColumn].filter(
+        (t) =>
+          !(
+            t.title === task.title &&
+            t.assigned === task.assigned &&
+            t.due === task.due
+          ),
+      ),
+
+      [toColumn]: [...workspace[toColumn], task],
     };
-  }
 
-  if (progress >= 40) {
-    return {
-      color: "#fde68a",
-      bg: "rgba(250,204,21,0.12)",
-      border: "rgba(250,204,21,0.22)",
-      gradient: "linear-gradient(90deg,#facc15,#fde68a)",
+    const updatedTasks = {
+      ...workspaceTasks,
+      [activeWorkspace]: updatedWorkspace,
     };
-  }
 
-  return {
-    color: "#fca5a5",
-    bg: "rgba(239,68,68,0.12)",
-    border: "rgba(239,68,68,0.22)",
-    gradient: "linear-gradient(90deg,#ef4444,#f87171)",
+    setWorkspaceTasks(updatedTasks);
+
+    try {
+      await setDoc(doc(db, "tasks", activeWorkspace), updatedWorkspace);
+    } catch (error) {
+      console.log(error);
+      alert(error.message);
+    }
   };
-};
-
-const generateCode = () => {
-
-  const random =
-    Math.floor(
-      1000 + Math.random() * 9000
-    );
-
-  return `SYNC-${random}`;
-};
-
-const handleCreateTeam = async () => {
-
-  if (
-    !newTeam.title ||
-    !newTeam.members ||
-    !newTeam.deadline
-  ) {
-    alert("Fill all fields");
-    return;
-  }
-
-  const code = generateCode();
-
-  const createdTeam = {
-    title: newTeam.title,
-    members: Number(newTeam.members),
-    deadline: newTeam.deadline,
-    progress: 0,
-    code,
-  };
-
-  const emptyTasks = {
-    todo: [],
-    inprogress: [],
-    review: [],
-    completed: [],
-  };
-
-  try {
-
-    await setDoc(
-      doc(db, "groups", code),
-      createdTeam
-    );
-
-    await setDoc(
-      doc(db, "tasks", code),
-      emptyTasks
-    );
-
-    setGroups(prev => [
-      ...prev,
-      createdTeam,
-    ]);
-
-    setWorkspaceTasks(prev => ({
-      ...prev,
-      [code]: emptyTasks,
-    }));
-
-    setActiveWorkspace(code);
-
-    setNewTeam({
-      title: "",
-      members: "",
-      deadline: "",
-    });
-
-    setShowModal(false);
-
-  } catch (error) {
-
-    console.log(error);
-    alert(error.message);
-
-  }
-};
-const activeGroup =
-  groups.find(
-    group =>
-      group.code === activeWorkspace
-  );
+  const activeGroup = groups.find((group) => group.code === activeWorkspace);
   return (
     <div className="collab-page">
-
       <div className="topbar">
         <div>
           <h1>Collaboration Workspace</h1>
@@ -348,15 +354,11 @@ const activeGroup =
         </div>
 
         <div className="topbar-right">
-          <input
-            type="text"
-            placeholder="Search groups, tasks, files..."
-          />
+          <input type="text" placeholder="Search groups, tasks, files..." />
 
           <button>Create Workspace</button>
         </div>
       </div>
-
 
       <section className="hero">
         <div className="hero-left">
@@ -365,379 +367,274 @@ const activeGroup =
           <h2>Study Better Together</h2>
 
           <p>
-            Organize projects, collaborate with teammates,
-            share resources, and never miss deadlines again.
+            Organize projects, collaborate with teammates, share resources, and
+            never miss deadlines again.
           </p>
 
           <div className="hero-buttons">
-            <button className="primary-btn"
-            onClick ={()=> setShowModal(true)}>
+            <button className="primary-btn" onClick={() => setShowModal(true)}>
               Create Team
             </button>
 
             <button
-  className="secondary-btn"
-  onClick={() =>
-    setShowJoinModal(true)
-  }
->
-  Join Workspace
-</button>
+              className="secondary-btn"
+              onClick={() => setShowJoinModal(true)}
+            >
+              Join Workspace
+            </button>
           </div>
         </div>
 
-      <div className="hero-right">
+        <div className="hero-right">
+          <div className="floating-card">
+            <h3>Team Progress</h3>
 
-        <div className="floating-card">
+            <div
+              className="progress-circle"
+              style={{
+                borderColor: getProgressColor(84).color,
 
-          <h3>Team Progress</h3>
+                boxShadow: `0 0 35px ${getProgressColor(84).border}`,
 
-      <div
-        className="progress-circle"
-        style={{
-          borderColor:
-            getProgressColor(84).color,
-
-          boxShadow:
-            `0 0 35px ${getProgressColor(84).border}`,
-
-          background:
-            `radial-gradient(circle,
+                background: `radial-gradient(circle,
             ${getProgressColor(84).bg},
             transparent 72%)`,
-        }}
-      >
-        <span>84%</span>
-      </div>
+              }}
+            >
+              <span>84%</span>
+            </div>
 
-      <p
-        style={{
-          color:
-            getProgressColor(84).color,
-        }}
-      >
-        Low urgency • On track
-      </p>
-
-    </div>
-  </div>
+            <p
+              style={{
+                color: getProgressColor(84).color,
+              }}
+            >
+              Low urgency • On track
+            </p>
+          </div>
+        </div>
       </section>
 
-        <section className="section">
+      <section className="section">
         <div className="section-header">
-            <h2>Active Study Groups</h2>
+          <h2>Active Study Groups</h2>
         </div>
 
         <div className="group-grid">
-
-            {groups.map((group, index) => {
-
-            const status =
-                getProgressColor(calculateProgress(group.code));
+          {groups.map((group, index) => {
+            const status = getProgressColor(calculateProgress(group.code));
 
             return (
-
-                <div
+              <div
                 className={`group-card ${
-                  activeWorkspace === group.code
-                    ? "active-group"
-                    : ""
+                  activeWorkspace === group.code ? "active-group" : ""
                 }`}
                 key={index}
-                 onClick={() =>
-                  setActiveWorkspace(group.code)
-                }
-                >
-
+                onClick={() => setActiveWorkspace(group.code)}
+              >
                 <div className="group-top">
+                  <h3>{group.title}</h3>
 
-                    <h3>{group.title}</h3>
-
-                    <span
+                  <span
                     style={{
-                        color: status.color,
-                        
+                      color: status.color,
                     }}
-                    >
+                  >
                     {calculateProgress(group.code)}%
-                    </span>
+                  </span>
 
+                  <button
+                    className="delete-group-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteGroup(group.code);
+                    }}
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
 
                 <p>
-                    {group.members} Members • {" "}{group.deadline}
+                  {group.members} Members • {group.deadline}
                 </p>
 
                 <div className="progress-bar">
-
-                    <div
+                  <div
                     className="progress-fill"
                     style={{
-                        width: `${calculateProgress(group.code)}%`,
-                        background: status.gradient,
-                        boxShadow:
-                        `0 0 18px ${status.border}`,
+                      width: `${calculateProgress(group.code)}%`,
+                      background: status.gradient,
+                      boxShadow: `0 0 18px ${status.border}`,
                     }}
-                    />
-
+                  />
                 </div>
 
-               
-
-                <small>
-                  Click to open workspace
-                </small>
-
-                </div>
+                <small>Click to open workspace</small>
+              </div>
             );
-            })}
-
+          })}
         </div>
-        </section>
-        
-        <div className="workspace-header">
+      </section>
 
-        
-          {groups.length === 0 ? (
+      <div className="workspace-header">
+        {groups.length === 0 ? (
+          <div className="empty-state">
+            <h2>No Workspaces Yet</h2>
 
-  <div className="empty-state">
+            <p>Create or join a workspace to start collaborating.</p>
+          </div>
+        ) : (
+          <>
+            <div>
+              <h2>{activeGroup?.title}</h2>
 
-    <h2>No Workspaces Yet</h2>
+              <p>Active collaboration workspace</p>
+            </div>
+            <button onClick={() => setShowInviteModal(true)}>
+              Invite Members
+            </button>
+          </>
+        )}
+      </div>
 
-    <p>
-      Create or join a workspace to start collaborating.
-    </p>
-
-  </div>
-
-) :(
-
-  <>
-     <div>
-
-          <h2>{activeGroup?.title}</h2>
-
-          <p>
-            Active collaboration workspace
-          </p>
-
-        </div>
-<button
-  onClick={() =>
-    setShowInviteModal(true)
-  }
->
-  Invite Members
-</button>
-</>
-)}
-</div>
-
-        <section className="section">
-
+      <section className="section">
         <div className="section-header">
-            <h2>Task Board</h2>
+          <h2>Task Board</h2>
 
-              {activeWorkspace && (
-
-    <button
-      className="add-task-btn"
-      onClick={() =>
-        setShowTaskModal(true)
-      }
-    >
-      + Add Task
-    </button>
-
-  )}
+          {activeWorkspace && (
+            <button
+              className="add-task-btn"
+              onClick={() => setShowTaskModal(true)}
+            >
+              + Add Task
+            </button>
+          )}
         </div>
 
         <div className="task-board">
-
-
-
-            <div className="task-column">
-
+          <div className="task-column">
             <h3>To Do</h3>
 
             {tasks.todo.map((task, i) => (
-
-                <div
-                className="task-card"
-                key={i}
+              <div className="task-card" key={i}>
+                <div className="task-title">{task.title}</div>
+                <button
+                  className="task-move-btn"
+                  onClick={() => moveTask(task, "todo", "inprogress")}
                 >
-
-                <div className="task-title">
-                    {task.title}
-                </div>
+                  Start →
+                </button>
 
                 <div className="task-hover">
+                  <p>
+                    <strong>Assigned:</strong> {task.assigned}
+                  </p>
 
-                    <p>
-                    <strong>Assigned:</strong>
-                    {" "}
-                    {task.assigned}
-                    </p>
+                  <p>
+                    <strong>Due:</strong> {task.due}
+                  </p>
 
-                    <p>
-                    <strong>Due:</strong>
-                    {" "}
-                    {task.due}
-                    </p>
-
-                    <p>
-                    <strong>Priority:</strong>
-                    {" "}
-                    {task.priority}
-                    </p>
-
+                  <p>
+                    <strong>Priority:</strong> {task.priority}
+                  </p>
                 </div>
-
-                </div>
-
+              </div>
             ))}
+          </div>
 
-            </div>
+          {/* IN PROGRESS */}
 
-            {/* IN PROGRESS */}
-
-            <div className="task-column">
-
+          <div className="task-column">
             <h3>In Progress</h3>
 
             {tasks.inprogress.map((task, i) => (
-
-                <div
-                className="task-card"
-                key={i}
+              <div className="task-card" key={i}>
+                <div className="task-title">{task.title}</div>
+                <button
+                  className="task-move-btn"
+                  onClick={() => moveTask(task, "inprogress", "review")}
                 >
-
-                <div className="task-title">
-                    {task.title}
-                </div>
+                  Send Review →
+                </button>
 
                 <div className="task-hover">
+                  <p>
+                    <strong>Assigned:</strong> {task.assigned}
+                  </p>
 
-                    <p>
-                    <strong>Assigned:</strong>
-                    {" "}
-                    {task.assigned}
-                    </p>
+                  <p>
+                    <strong>Due:</strong> {task.due}
+                  </p>
 
-                    <p>
-                    <strong>Due:</strong>
-                    {" "}
-                    {task.due}
-                    </p>
-
-                    <p>
-                    <strong>Priority:</strong>
-                    {" "}
-                    {task.priority}
-                    </p>
-
+                  <p>
+                    <strong>Priority:</strong> {task.priority}
+                  </p>
                 </div>
-
-                </div>
-
+              </div>
             ))}
+          </div>
 
-            </div>
+          {/* REVIEW */}
 
-            {/* REVIEW */}
-
-            <div className="task-column">
-
+          <div className="task-column">
             <h3>Review</h3>
 
             {tasks.review.map((task, i) => (
-
-                <div
-                className="task-card"
-                key={i}
+              <div className="task-card" key={i}>
+                <div className="task-title">{task.title}</div>
+                <button
+                  className="task-move-btn"
+                  onClick={() => moveTask(task, "review", "completed")}
                 >
-
-                <div className="task-title">
-                    {task.title}
-                </div>
+                  Complete →
+                </button>
 
                 <div className="task-hover">
+                  <p>
+                    <strong>Assigned:</strong> {task.assigned}
+                  </p>
 
-                    <p>
-                    <strong>Assigned:</strong>
-                    {" "}
-                    {task.assigned}
-                    </p>
+                  <p>
+                    <strong>Due:</strong> {task.due}
+                  </p>
 
-                    <p>
-                    <strong>Due:</strong>
-                    {" "}
-                    {task.due}
-                    </p>
-
-                    <p>
-                    <strong>Priority:</strong>
-                    {" "}
-                    {task.priority}
-                    </p>
-
+                  <p>
+                    <strong>Priority:</strong> {task.priority}
+                  </p>
                 </div>
-
-                </div>
-
+              </div>
             ))}
+          </div>
 
-            </div>
+          {/* COMPLETED */}
 
-            {/* COMPLETED */}
-
-            <div className="task-column">
-
+          <div className="task-column">
             <h3>Completed</h3>
 
             {tasks.completed.map((task, i) => (
-
-                <div
-                className="task-card completed"
-                key={i}
-                >
-
-                <div className="task-title">
-                    {task.title}
-                </div>
+              <div className="task-card completed" key={i}>
+                <div className="task-title">{task.title}</div>
 
                 <div className="task-hover">
+                  <p>
+                    <strong>Assigned:</strong> {task.assigned}
+                  </p>
 
-                    <p>
-                    <strong>Assigned:</strong>
-                    {" "}
-                    {task.assigned}
-                    </p>
-
-                    <p>
-                    <strong>Status:</strong>
-                    {" "}
-                    Finished
-                    </p>
-
+                  <p>
+                    <strong>Status:</strong> Finished
+                  </p>
                 </div>
-
-                </div>
-
+              </div>
             ))}
-
-            </div>
-
+          </div>
         </div>
-
-        </section>
+      </section>
       <section className="section">
         <div className="section-header">
           <h2>Upcoming Study Sessions</h2>
         </div>
 
         <div className="session-grid">
-
           <div className="session-card">
             <h3>Operating Systems Revision</h3>
 
@@ -757,300 +654,249 @@ const activeGroup =
 
             <button>Join Session</button>
           </div>
-
         </div>
       </section>
       {/* CREATE TEAM MODAL */}
 
-{showModal && (
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="team-modal">
+            <h2>Create New Team</h2>
 
-  <div className="modal-overlay">
+            <input
+              type="text"
+              placeholder="Team Name"
+              value={newTeam.title}
+              onChange={(e) =>
+                setNewTeam({
+                  ...newTeam,
+                  title: e.target.value,
+                })
+              }
+            />
 
-    <div className="team-modal">
+            <input
+              type="number"
+              placeholder="Members"
+              value={newTeam.members}
+              onChange={(e) =>
+                setNewTeam({
+                  ...newTeam,
+                  members: e.target.value,
+                })
+              }
+            />
 
-      <h2>Create New Team</h2>
+            <input
+              type="date"
+              placeholder="Deadline"
+              value={newTeam.deadline}
+              onChange={(e) =>
+                setNewTeam({
+                  ...newTeam,
+                  deadline: e.target.value,
+                })
+              }
+            />
 
-      <input
-        type="text"
-        placeholder="Team Name"
-        value={newTeam.title}
-        onChange={(e) =>
-          setNewTeam({
-            ...newTeam,
-            title: e.target.value,
-          })
-        }
-      />
+            <div className="modal-buttons">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
 
-      <input
-        type="number"
-        placeholder="Members"
-        value={newTeam.members}
-        onChange={(e) =>
-          setNewTeam({
-            ...newTeam,
-            members: e.target.value,
-          })
-        }
-      />
-
-      <input
-        type="text"
-        placeholder="Deadline"
-        value={newTeam.deadline}
-        onChange={(e) =>
-          setNewTeam({
-            ...newTeam,
-            deadline: e.target.value,
-          })
-        }
-      />
-
-    
-
-      <div className="modal-buttons">
-
-        <button
-          className="cancel-btn"
-          onClick={() => setShowModal(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="create-btn"
-          onClick={handleCreateTeam}
-        >
-          Create
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-)}
-{/* INVITE MODAL */}
-
-{showInviteModal && (
-
-  <div className="invite-overlay">
-
-    <div className="invite-modal">
-
-      <div className="invite-top">
-
-        <div>
-
-          <h2>
-            Invite Members
-          </h2>
-
-          <p>
-            Share this workspace code
-            with your teammates.
-          </p>
-
+              <button className="create-btn" onClick={handleCreateTeam}>
+                Create
+              </button>
+            </div>
+          </div>
         </div>
+      )}
+      {/* INVITE MODAL */}
 
-        <button
-          className="close-invite"
-          onClick={() =>
-            setShowInviteModal(false)
-          }
-        >
-          ×
-        </button>
+      {showInviteModal && (
+        <div className="invite-overlay">
+          <div className="invite-modal">
+            <div className="invite-top">
+              <div>
+                <h2>Invite Members</h2>
 
-      </div>
+                <p>Share this workspace code with your teammates.</p>
+              </div>
 
-      <div className="invite-code-box">
+              <button
+                className="close-invite"
+                onClick={() => setShowInviteModal(false)}
+              >
+                ×
+              </button>
+            </div>
 
-        <span>
-          Workspace Code
-        </span>
+            <div className="invite-code-box">
+              <span>Workspace Code</span>
 
-        <strong>
-          {activeGroup?.code}
-        </strong>
+              <strong>{activeGroup?.code}</strong>
+            </div>
 
-      </div>
+            <button
+              className="copy-code-btn"
+              onClick={() => {
+                navigator.clipboard.writeText(activeGroup?.code);
+              }}
+            >
+              Copy Invite Code
+            </button>
 
-      <button
-        className="copy-code-btn"
-        onClick={() => {
+            <div className="share-link">
+              <span>Share Link</span>
 
-          navigator.clipboard.writeText(
-            activeGroup?.code
-          );
-        }}
-      >
-        Copy Invite Code
-      </button>
+              <p>
+                syncsphere.app/join/
+                {activeGroup?.code}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <div className="share-link">
+      {showJoinModal && (
+        <div className="modal-overlay">
+          <div className="team-modal">
+            <h2>Join Workspace</h2>
 
-        <span>
-          Share Link
-        </span>
+            <input
+              type="text"
+              placeholder="Enter Invite Code"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value)}
+            />
 
-        <p>
-          syncsphere.app/join/
-          {activeGroup?.code}
-        </p>
+            <div className="modal-buttons">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowJoinModal(false)}
+              >
+                Cancel
+              </button>
 
-      </div>
+              <button className="create-btn" onClick={handleJoinWorkspace}>
+                Join
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {showTaskModal && (
+        <div className="modal-overlay">
+          <div className="team-modal">
+            <h2>Add New Task</h2>
+
+            <input
+              type="text"
+              placeholder="Task Title"
+              value={newTask.title}
+              onChange={(e) =>
+                setNewTask({
+                  ...newTask,
+                  title: e.target.value,
+                })
+              }
+            />
+
+            <input
+              type="text"
+              placeholder="Assigned To"
+              value={newTask.assigned}
+              onChange={(e) =>
+                setNewTask({
+                  ...newTask,
+                  assigned: e.target.value,
+                })
+              }
+            />
+
+            <input
+              type="date"
+              placeholder="Due Date"
+              value={newTask.due}
+              onChange={(e) =>
+                setNewTask({
+                  ...newTask,
+                  due: e.target.value,
+                })
+              }
+            />
+
+            <select
+              value={newTask.priority}
+              onChange={(e) =>
+                setNewTask({
+                  ...newTask,
+                  priority: e.target.value,
+                })
+              }
+            >
+              <option value="">Select Priority</option>
+
+              <option value="Low">Low</option>
+
+              <option value="Medium">Medium</option>
+
+              <option value="High">High</option>
+
+              <option value="Critical">Critical</option>
+            </select>
+
+            <div className="modal-buttons">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowTaskModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button className="create-btn" onClick={handleAddTask}>
+                Add Task
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCompletionModal && completedGroup && (
+        <div className="modal-overlay">
+          <div className="team-modal completion-modal">
+            <h2>🎉 Study Group Completed</h2>
+
+            <p>
+              All tasks for
+              <strong> {completedGroup.title}</strong> have been completed.
+            </p>
+
+            <div className="modal-buttons">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowCompletionModal(false)}
+              >
+                Keep Group
+              </button>
+
+              <button
+                className="delete-btn"
+                onClick={() => {
+                  handleDeleteGroup(completedGroup.code);
+
+                  setShowCompletionModal(false);
+                }}
+              >
+                Delete Group
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-
-  </div>
-)}
-
-{showJoinModal && (
-
-  <div className="modal-overlay">
-
-    <div className="team-modal">
-
-      <h2>Join Workspace</h2>
-
-      <input
-        type="text"
-        placeholder="Enter Invite Code"
-        value={joinCode}
-        onChange={(e) =>
-          setJoinCode(e.target.value)
-        }
-      />
-
-      <div className="modal-buttons">
-
-        <button
-          className="cancel-btn"
-          onClick={() =>
-            setShowJoinModal(false)
-          }
-        >
-          Cancel
-        </button>
-
-        <button
-          className="create-btn"
-          onClick={handleJoinWorkspace}
-        >
-          Join
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-)}
-
-{showTaskModal && (
-
-  <div className="modal-overlay">
-
-    <div className="team-modal">
-
-      <h2>Add New Task</h2>
-
-      <input
-        type="text"
-        placeholder="Task Title"
-        value={newTask.title}
-        onChange={(e) =>
-          setNewTask({
-            ...newTask,
-            title: e.target.value,
-          })
-        }
-      />
-
-      <input
-        type="text"
-        placeholder="Assigned To"
-        value={newTask.assigned}
-        onChange={(e) =>
-          setNewTask({
-            ...newTask,
-            assigned: e.target.value,
-          })
-        }
-      />
-
-      <input
-        type="text"
-        placeholder="Due Date"
-        value={newTask.due}
-        onChange={(e) =>
-          setNewTask({
-            ...newTask,
-            due: e.target.value,
-          })
-        }
-      />
-
-      <select
-        value={newTask.priority}
-        onChange={(e) =>
-          setNewTask({
-            ...newTask,
-            priority: e.target.value,
-          })
-        }
-      >
-
-        <option value="">
-          Select Priority
-        </option>
-
-        <option value="Low">
-          Low
-        </option>
-
-        <option value="Medium">
-          Medium
-        </option>
-
-        <option value="High">
-          High
-        </option>
-
-        <option value="Critical">
-          Critical
-        </option>
-
-      </select>
-
-      <div className="modal-buttons">
-
-        <button
-          className="cancel-btn"
-          onClick={() =>
-            setShowTaskModal(false)
-          }
-        >
-          Cancel
-        </button>
-
-        <button
-          className="create-btn"
-          onClick={handleAddTask}
-        >
-          Add Task
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-)}
-
-    </div>
-
-  
-  )};
+  );
+}
