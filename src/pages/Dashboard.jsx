@@ -49,13 +49,13 @@ export default function Dashboard({ profileData }) {
       const nextWeekDateMs = nextWeekDate.getTime();
       const dueDateMs = new Date(deadline.dueDate).getTime();
 
-      if(dueDateMs >= todayMs && dueDateMs <= nextWeekDateMs){
+      if (dueDateMs >= todayMs && dueDateMs <= nextWeekDateMs) {
         return deadline;
       }
-    }).length;
-    const highPriority = userData?.deadlines?.filter((deadline) => deadline.urgency === 'high').length;
-    const tasksCompleted = userData?.completedDeadlines?.length;
-    const productivityScore = Math.ceil((tasksCompleted*100)/(userData?.deadlines.length + tasksCompleted));
+    }).length || 0;
+    const highPriority = userData?.deadlines?.filter((deadline) => deadline.urgency === 'high').length || 0;
+    const tasksCompleted = userData?.completedDeadlines?.length || 0;
+    const productivityScore = Math.ceil((tasksCompleted * 100) / (userData?.deadlines.length + tasksCompleted)) || 0;
 
     setStats({
       dueThisWeek: dueThisWeek,
@@ -76,44 +76,63 @@ export default function Dashboard({ profileData }) {
     setHeatmapData(generatedData);
   }, [userData]);
 
-  const deadlines = [
-    {
-      id: 1,
-      title: 'Advanced AI Project Proposal',
-      course: 'Machine Learning',
-      type: 'assignment',
-      timeText: 'Today',
-      dateText: 'Apr 28, 7:34 AM',
-      color: 'red',
-    },
-    {
-      id: 2,
-      title: 'Midterm Exam',
-      course: 'Distributed Systems',
-      type: 'exam',
-      timeText: 'Tomorrow',
-      dateText: 'Apr 29, 7:34 AM',
-      color: 'red',
-    },
-    {
-      id: 3,
-      title: 'HCI Usability Testing Report',
-      course: 'HCI',
-      type: 'assignment',
-      timeText: 'In 3 days',
-      dateText: 'May 1, 7:34 AM',
-      color: 'blue',
-    },
-    {
-      id: 4,
-      title: 'Software Engineering Group Presentation',
-      course: 'Software Engineering',
-      type: 'presentation',
-      timeText: 'In 4 days',
-      dateText: 'May 2, 7:34 AM',
-      color: 'purple',
-    },
-  ];
+  const getRelativeTimeText = (dateString) => {
+    if (!dateString) return "No date";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const targetDate = new Date(dateString);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const diffTime = targetDate.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
+    return `In ${diffDays} days`;
+  };
+
+  const formatCalendarText = (dateString) => {
+    if (!dateString) return "N/A";
+    const dateObj = new Date(dateString);
+
+    return dateObj.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }) + `, ` + dateObj.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const colorMap = {
+    high: 'red',
+    med: 'purple',
+    low: 'blue'
+  };
+
+  const deadlines = (userData?.deadlines || [])
+    .sort((a, b) => {
+      const timeA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+      const timeB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+
+      return timeA - timeB; // Ascending order (Closest deadline first)
+    })
+    .slice(0, 4)
+    .map((deadline) => {
+      return {
+        id: deadline.id,
+        title: deadline.title,
+        course: deadline.course,
+        type: deadline.type || 'assignment',
+        timeText: getRelativeTimeText(deadline.dueDate),
+        dateText: formatCalendarText(deadline.dueDate),
+        color: colorMap[deadline.urgency] || 'blue',
+      };
+    });
 
   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -179,7 +198,7 @@ export default function Dashboard({ profileData }) {
                 <div className={`deadline-indicator indicator-${item.color}`}></div>
                 <div className="deadline-content">
                   <h4 className="deadline-title">{item.title}</h4>
-                  <p className="deadline-subtitle">{item.course} • {item.type}</p>
+                  <p className="deadline-subtitle">{item.course} • {item.type.charAt(0).toUpperCase() + item.type.slice(1)}</p>
                 </div>
                 <div className="deadline-time">
                   <p className={`deadline-time-primary ${item.timeText === 'Today' ? 'time-today' : item.timeText === 'Tomorrow' ? 'time-tomorrow' : 'time-future'}`}>
