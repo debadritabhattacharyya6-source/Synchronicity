@@ -66,12 +66,23 @@ export default function Dashboard({ profileData }) {
 
     // Generate random heatmap data (35 cells for 7x5 grid)
     // 0 = empty, 1 = low, 2 = medium, 3 = high
-    const generatedData = Array(35).fill(0).map(() => {
+    const generatedData = Array(35).fill(0).map((day, index) => {
       const rand = Math.random();
-      if (rand > 0.8) return 3; // High stress
-      if (rand > 0.5) return 2; // Medium stress
-      if (rand > 0.2) return 1; // Low stress/active
-      return 0; // Empty
+      const today = new Date();
+      const dayOfMap = new Date(today);
+      dayOfMap.setDate(today.getDate() + index);
+      let heat = 0;
+      userData?.deadlines?.forEach((deadline) => {
+        if(deadline.dueDate === dayOfMap.toLocaleDateString('en-CA')){
+          if(deadline.type === 'exam')
+            heat += 3;
+          else if(deadline.type === 'assignment')
+            heat += 2;
+          else
+            heat += 1;
+        }
+      })
+      return heat;
     });
     setHeatmapData(generatedData);
   }, [userData]);
@@ -224,7 +235,7 @@ export default function Dashboard({ profileData }) {
             </div>
             <div className="heatmap-grid">
               {heatmapData.map((val, i) => (
-                <div key={i} className={`heatmap-cell heat-${val}`} title={`Stress level: ${val}`}></div>
+                <div key={i} className={`heatmap-cell heat-${(val <= 3 ? val : 3)}`} title={`Stress level: ${val}`}></div>
               ))}
             </div>
 
