@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import "./Collaborations.css";
-import { db } from "../assets/firebase";
+import { db, auth } from "../assets/firebase";
 import { Trash2 } from "lucide-react";
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   setDoc,
   deleteDoc,
+  query,
+  where,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 
 export default function CollaborationPage() {
@@ -57,7 +62,16 @@ export default function CollaborationPage() {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "groups"));
+        const user = auth.currentUser;
+
+        if (!user) return;
+
+        const q = query(
+          collection(db, "groups"),
+          where("memberIds", "array-contains", user.uid),
+        );
+
+        const querySnapshot = await getDocs(q);
 
         const loadedGroups = [];
 
@@ -144,13 +158,17 @@ export default function CollaborationPage() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "tasks"));
-
         const loadedTasks = {};
 
-        querySnapshot.forEach((doc) => {
-          loadedTasks[doc.id] = doc.data();
-        });
+        for (const group of groups) {
+          const taskRef = doc(db, "tasks", group.code);
+
+          const taskSnap = await getDoc(taskRef);
+
+          if (taskSnap.exists()) {
+            loadedTasks[group.code] = taskSnap.data();
+          }
+        }
 
         setWorkspaceTasks(loadedTasks);
       } catch (error) {
@@ -159,26 +177,65 @@ export default function CollaborationPage() {
       }
     };
 
-    fetchTasks();
-  }, []);
+    if (groups.length > 0) {
+      fetchTasks();
+    }
+  }, [groups]);
 
   const [joinCode, setJoinCode] = useState("");
 
   const [showJoinModal, setShowJoinModal] = useState(false);
 
-  const handleJoinWorkspace = () => {
-    const foundGroup = groups.find((group) => group.code === joinCode);
-
-    if (!foundGroup) {
-      alert("Invalid workspace code");
+  const handleJoinWorkspace = async () => {
+    if (!joinCode.trim()) {
+      alert("Enter a code");
       return;
     }
 
-    setActiveWorkspace(foundGroup.title);
+    try {
+      const q = query(collection(db, "groups"), where("code", "==", joinCode));
 
-    setShowJoinModal(false);
+      const snapshot = await getDocs(q);
 
-    setJoinCode("");
+      if (snapshot.empty) {
+        alert("Invalid workspace code");
+        return;
+      }
+
+      const groupDoc = snapshot.docs[0];
+
+      const groupData = groupDoc.data();
+
+      await updateDoc(groupDoc.ref, {
+        memberIds: arrayUnion(auth.currentUser.uid),
+      });
+
+      setGroups((prev) => {
+        const exists = prev.some((g) => g.code === groupData.code);
+
+        if (exists) return prev;
+
+        return [
+          ...prev,
+          {
+            ...groupData,
+            memberIds: [...(groupData.memberIds || []), auth.currentUser.uid],
+          },
+        ];
+      });
+
+      setActiveWorkspace(groupData.code);
+
+      setShowJoinModal(false);
+
+      setJoinCode("");
+
+      alert("Successfully joined workspace");
+    } catch (error) {
+      console.log(error);
+
+      alert(error.message);
+    }
   };
 
   const calculateProgress = (workspaceName) => {
@@ -224,10 +281,23 @@ export default function CollaborationPage() {
     };
   };
 
-  const generateCode = () => {
-    const random = Math.floor(1000 + Math.random() * 9000);
+  const generateCode = async () => {
+    let code;
+    let exists = true;
 
-    return `SYNC-${random}`;
+    while (exists) {
+      const random = Math.floor(1000 + Math.random() * 9000);
+
+      code = `SYNC-${random}`;
+
+      const groupRef = doc(db, "groups", code);
+
+      const snapshot = await getDoc(groupRef);
+
+      exists = snapshot.exists();
+    }
+
+    return code;
   };
 
   const handleCreateTeam = async () => {
@@ -236,14 +306,24 @@ export default function CollaborationPage() {
       return;
     }
 
-    const code = generateCode();
+    const code = await generateCode();
+
+    const user = auth.currentUser;
+    const q = query(
+      collection(db, "groups"),
+      where("memberIds", "array-contains", user.uid),
+    );
 
     const createdTeam = {
       title: newTeam.title,
-      members: Number(newTeam.members),
+      maxMembers: Number(newTeam.members),
       deadline: newTeam.deadline,
       progress: 0,
       code,
+
+      ownerId: user.uid,
+
+      memberIds: [user.uid],
     };
 
     const emptyTasks = {
@@ -455,7 +535,10 @@ export default function CollaborationPage() {
                 </div>
 
                 <p>
-                  {group.members} Members • {group.deadline}
+                  <p>
+                    {group.memberIds?.length || 0}/{group.maxMembers} Members •{" "}
+                    {group.deadline}
+                  </p>
                 </p>
 
                 <div className="progress-bar">
