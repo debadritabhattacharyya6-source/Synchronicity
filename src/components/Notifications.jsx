@@ -1,150 +1,151 @@
-import { useState } from "react";
-import { Bell, AlertTriangle, Clock, CheckCircle } from "lucide-react";
-
-const sampleNotifications = [
-  {
-    id: 1,
-    type: "urgent",
-    title: "AI Project Proposal",
-    message: "Deadline is within 12 hours.",
-    time: "5 min ago",
-    read: false,
-  },
-  {
-    id: 2,
-    type: "warning",
-    title: "Midterm Exam",
-    message: "Exam starts tomorrow morning.",
-    time: "20 min ago",
-    read: false,
-  },
-  {
-    id: 3,
-    type: "success",
-    title: "Task Completed",
-    message: "You completed HCI Report.",
-    time: "1 hour ago",
-    read: true,
-  },
-];
+import React, { useEffect, useState } from "react";
+import { Bell } from "lucide-react";
+import { auth, db } from "../assets/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 export default function Notifications() {
+  const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState(
-    sampleNotifications
-  );
 
-  const unreadCount = notifications.filter(
-    (n) => !n.read
-  ).length;
+  useEffect(() => {
+    if (!auth.currentUser) return;
 
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      )
+    const userRef = doc(
+      db,
+      "users",
+      auth.currentUser.uid
     );
-  };
 
-  const getIcon = (type) => {
-    switch (type) {
-      case "urgent":
-        return (
-          <AlertTriangle className="text-red-400" size={18} />
+    const unsubscribe = onSnapshot(userRef, (snap) => {
+      if (!snap.exists()) return;
+
+      const userData = snap.data();
+      const deadlines = userData.deadlines || [];
+
+      const now = new Date();
+      const generated = [];
+
+      deadlines.forEach((deadline) => {
+        const deadlineDateTime = new Date(
+          `${deadline.dueDate}T${deadline.time}`
         );
 
-      case "warning":
-        return <Clock className="text-yellow-400" size={18} />;
+        const diffMs =
+          deadlineDateTime.getTime() - now.getTime();
 
-      case "success":
-        return (
-          <CheckCircle className="text-green-400" size={18} />
-        );
+        const hoursLeft =
+          diffMs / (1000 * 60 * 60);
 
-      default:
-        return <Bell size={18} />;
-    }
-  };
+        // Deadline within 24 hours
+        if (hoursLeft > 0 && hoursLeft <= 24) {
+          generated.push({
+            id: `urgent-${deadline.id}`,
+            title: "🚨 Deadline Approaching",
+            message: `${deadline.title} is due in ${Math.ceil(
+              hoursLeft
+            )} hours`,
+            time: "Now",
+          });
+        }
+
+        // Due today
+        const today =
+          now.toISOString().split("T")[0];
+
+        if (deadline.dueDate === today) {
+          generated.push({
+            id: `today-${deadline.id}`,
+            title: "📅 Due Today",
+            message: `${deadline.title} must be submitted today`,
+            time: "Today",
+          });
+        }
+
+        // High priority
+        if (deadline.urgency === "high") {
+          generated.push({
+            id: `high-${deadline.id}`,
+            title: "⚠️ High Priority Task",
+            message: `${deadline.title} requires immediate attention`,
+            time: "Priority",
+          });
+        }
+
+        // Exam
+        if (deadline.type === "exam") {
+          generated.push({
+            id: `exam-${deadline.id}`,
+            title: "📝 Exam Reminder",
+            message: `${deadline.title} exam is coming soon`,
+            time: "Upcoming",
+          });
+        }
+      });
+
+      setNotifications(generated);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
-    <div className="relative">
-      {/* Notification Bell */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-full bg-[#0f1f17] hover:bg-[#173126] transition"
-      >
-        <Bell className="text-white" size={22} />
+    <div className="notification-wrapper">
 
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white w-5 h-5 rounded-full flex items-center justify-center">
-            {unreadCount}
+      <button
+        className="icon-btn"
+        onClick={() => setOpen(!open)}
+      >
+        <Bell size={20} />
+
+        {notifications.length > 0 && (
+          <span className="dot">
+            {notifications.length}
           </span>
         )}
       </button>
 
-      {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 mt-4 w-[360px] bg-[#08110d] border border-[#1d3a2f] rounded-2xl shadow-2xl z-50 overflow-hidden">
-          {/* Header */}
-          <div className="p-4 border-b border-[#163126] flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">
-              Notifications
-            </h2>
+        <div className="notification-dropdown">
 
-            <span className="text-sm text-green-400">
-              {unreadCount} unread
+          <div className="notification-header">
+            <h3>Notifications</h3>
+            <span>
+              {notifications.length} unread
             </span>
           </div>
 
-          {/* Notification List */}
-          <div className="max-h-[400px] overflow-y-auto">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() =>
-                  markAsRead(notification.id)
-                }
-                className={`p-4 border-b border-[#13261f] cursor-pointer transition hover:bg-[#102019]
-                  ${
-                    !notification.read
-                      ? "bg-[#0d1914]"
-                      : "bg-transparent"
-                  }
-                `}
-              >
-                <div className="flex gap-3">
-                  {/* Icon */}
-                  <div className="mt-1">
-                    {getIcon(notification.type)}
-                  </div>
+          <div className="notification-list">
 
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <h3 className="text-white font-medium">
-                        {notification.title}
-                      </h3>
+            {notifications.length === 0 ? (
+              <div className="notification-card">
+                <p>No notifications</p>
+              </div>
+            ) : (
+              notifications.map((item) => (
+                <div
+                  key={item.id}
+                  className="notification-card unread"
+                >
+                  <div className="notification-content">
 
-                      <span className="text-xs text-gray-400">
-                        {notification.time}
-                      </span>
+                    <div className="notification-top">
+                      <h4>{item.title}</h4>
+                      <span>{item.time}</span>
                     </div>
 
-                    <p className="text-sm text-gray-300 mt-1">
-                      {notification.message}
-                    </p>
+                    <p>{item.message}</p>
+
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
+
           </div>
 
-          {/* Footer */}
-          <div className="p-3 text-center border-t border-[#163126]">
-            <button className="text-green-400 hover:text-green-300 text-sm">
-              View All Notifications
-            </button>
+          <div className="notification-footer">
+            View All Notifications
           </div>
+
         </div>
       )}
     </div>
