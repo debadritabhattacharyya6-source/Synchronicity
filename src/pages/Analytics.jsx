@@ -1,21 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { auth, db } from "../assets/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
-
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
+
+import { auth, db } from "/src/assets/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 import "./Analytics.css";
 
-export default function CompletedDeadlinesGraph() {
-  const [graphData, setGraphData] = useState([]);
+const COLORS = [
+  "#52b788",
+  "#4a7e64",
+  "#52b78840",
+];
+
+export default function Analytics() {
+  const [lineData, setLineData] = useState([]);
+  const [pieData, setPieData] = useState([]);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -33,113 +44,167 @@ export default function CompletedDeadlinesGraph() {
 
         const userData = snap.data();
 
-        const completedDeadlines =
+        const completed =
           userData.completedDeadlines || [];
 
-        const groupedData = {};
+        //----------------------------------
+        // PIE CHART DATA
+        //----------------------------------
 
-        completedDeadlines.forEach((deadline) => {
-          if (!deadline.completedAt) return;
+        let assignments = 0;
+        let exams = 0;
+        let projects = 0;
 
-          const date = new Date(
-            deadline.completedAt
-          )
-            .toISOString()
-            .split("T")[0];
+        completed.forEach((item) => {
+          if (item.type === "assignment")
+            assignments++;
 
-          groupedData[date] =
-            (groupedData[date] || 0) + 1;
+          else if (item.type === "exam")
+            exams++;
+
+          else if (item.type === "project")
+            projects++;
         });
 
-        const formattedData = Object.keys(
-          groupedData
+        setPieData([
+          {
+            name: "Assignments",
+            value: assignments,
+          },
+          {
+            name: "Exams",
+            value: exams,
+          },
+          {
+            name: "Projects",
+            value: projects,
+          },
+        ]);
+
+        //----------------------------------
+        // LINE GRAPH DATA
+        //----------------------------------
+
+        const dateMap = {};
+
+        completed.forEach((item) => {
+          if (!item.completedAt) return;
+
+          const date =
+            new Date(item.completedAt)
+              .toISOString()
+              .split("T")[0];
+
+          dateMap[date] =
+            (dateMap[date] || 0) + 1;
+        });
+
+        const graphData = Object.keys(
+          dateMap
         )
           .sort()
           .map((date) => ({
             date,
-            completed: groupedData[date]
+            completed: dateMap[date],
           }));
 
-        setGraphData(formattedData);
+        setLineData(graphData);
       }
     );
 
     return () => unsubscribe();
   }, []);
 
-  const CustomTooltip = ({
-    active,
-    payload,
-    label
-  }) => {
-    if (
-      active &&
-      payload &&
-      payload.length
-    ) {
-      return (
-        <div className="custom-tooltip">
-          <p>{label}</p>
-          <p>
-            Completed:{" "}
-            {payload[0].value}
-          </p>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
-    <div className="graph-card">
-      <div className="graph-header">
-        <div>
-          <h3 className="graph-title">
-            Completed Deadlines
-          </h3>
+    <div className="analytics-container">
+      {/* GRAPH */}
 
-          <p className="graph-subtitle">
-            Daily completion trend
-          </p>
-        </div>
+      <div className="analytics-card">
+        <h2>
+          Completed Deadlines Per Day
+        </h2>
+
+        {lineData.length === 0 ? (
+          <div className="empty-state">
+            No completed deadlines
+          </div>
+        ) : (
+          <ResponsiveContainer
+  width="100%"
+  height={350}
+>
+  <LineChart data={lineData}>
+    <XAxis
+      dataKey="date"
+      axisLine={true}
+      tickLine={false}
+    />
+
+    <YAxis
+      axisLine={true}
+      tickLine={false}
+      allowDecimals={false}
+    />
+
+    <Tooltip />
+
+    <Line
+      type="monotone"
+      dataKey="completed"
+      stroke="#52b788"
+      strokeWidth={3}
+      dot={{ r: 4 }}
+      activeDot={{ r: 6 }}
+    />
+  </LineChart>
+</ResponsiveContainer>
+        )}
       </div>
 
-      <div className="graph-container">
-        {graphData.length === 0 ? (
-          <div className="graph-empty">
-            No completed deadlines yet
+      {/* PIE */}
+
+      <div className="analytics-card">
+        <h2>
+          Completion Distribution
+        </h2>
+
+        {pieData.every(
+          (item) => item.value === 0
+        ) ? (
+          <div className="empty-state">
+            No completed deadlines
           </div>
         ) : (
           <ResponsiveContainer
             width="100%"
-            height="100%"
+            height={350}
           >
-            <AreaChart data={graphData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-              />
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                outerRadius={120}
+                label
+              >
+                {pieData.map(
+                  (entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={
+                        COLORS[
+                          index %
+                            COLORS.length
+                        ]
+                      }
+                    />
+                  )
+                )}
+              </Pie>
 
-              <XAxis
-                dataKey="date"
-              />
+              <Tooltip />
 
-              <YAxis
-                allowDecimals={false}
-              />
-
-              <Tooltip
-                content={<CustomTooltip />}
-              />
-
-              <Area
-                type="monotone"
-                dataKey="completed"
-                stroke="#52b788"
-                fill="#52b788"
-                fillOpacity={0.35}
-              />
-            </AreaChart>
+              <Legend />
+            </PieChart>
           </ResponsiveContainer>
         )}
       </div>

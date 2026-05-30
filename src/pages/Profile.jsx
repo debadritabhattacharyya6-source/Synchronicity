@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react' ;
+import React, { useEffect, useState } from 'react';
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "/src/assets/firebase";
 import { useNavigate } from 'react-router-dom';
@@ -58,37 +58,37 @@ export default function Profile({ profileData, setProfileData }) {
       email: profileData?.email || user?.email || "",
       phone: profileData?.phone || "Not Set"
     });
-     }, [profileData]);
-     useEffect(() => {
-  if (!auth.currentUser) return;
+  }, [profileData]);
+  useEffect(() => {
+    if (!auth.currentUser) return;
 
-  const userRef = doc(
-    db,
-    "users",
-    auth.currentUser.uid
-  );
+    const userRef = doc(
+      db,
+      "users",
+      auth.currentUser.uid
+    );
 
-  const unsubscribe = onSnapshot(userRef, (snap) => {
-    if (!snap.exists()) return;
+    const unsubscribe = onSnapshot(userRef, (snap) => {
+      if (!snap.exists()) return;
 
-    const userData = snap.data();
+      const userData = snap.data();
 
-    const completed =
-      userData.completedDeadlines || [];
+      const completed =
+        userData.completedDeadlines || [];
 
-    const latestThree = [...completed]
-      .sort(
-        (a, b) =>
-          (b.completedAt || 0) -
-          (a.completedAt || 0)
-      )
-      .slice(0, 3);
+      const latestThree = [...completed]
+        .sort(
+          (a, b) =>
+            (b.completedAt || 0) -
+            (a.completedAt || 0)
+        )
+        .slice(0, 3);
 
-    setRecentActivities(latestThree);
-  });
+      setRecentActivities(latestThree);
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="profile-container">
@@ -112,47 +112,28 @@ export default function Profile({ profileData, setProfileData }) {
           <div className="profile-details">
             <div className="profile-name-role">
               <h1>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
-              <p className="role-badge">Student</p>
+              <span>Student at {userData.university}</span>
             </div>
-            <p className="profile-bio">
-              Student passionate about building beautiful and interactive web experiences.
-              Always eager to learn new technologies and improve my craft.
-            </p>
 
-            <div className="profile-stats">
-              <div className="stat-item">
-                <span className="stat-value">10</span>
-                <span className="stat-label">Projects</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">20</span>
-                <span className="stat-label">Tasks Done</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">4.9</span>
-                <span className="stat-label">Rating</span>
-              </div>
-            </div>
           </div>
 
           <div className="profile-actions">
             <button className="btn-primary" onClick={editProfile}>Edit Profile</button>
-            {showEditProfile && 
-            <UserDetails
-              onComplete={(updatedData) => { 
-                setShowEditProfile(false);
-                if (updatedData) {
-                  setProfileData(updatedData);
-                }
-              }}
-              first_name={userData.firstName}
-              last_name={userData.lastName}
-              middle_name={userData.middleName}
-              branch_name={userData.branch}
-              university_name={userData.university}
-              mail={userData.email}
-              ph={userData.phone} />}
-            <button className="btn-secondary">Share</button>
+            {showEditProfile &&
+              <UserDetails
+                onComplete={(updatedData) => {
+                  setShowEditProfile(false);
+                  if (updatedData) {
+                    setProfileData(updatedData);
+                  }
+                }}
+                first_name={userData.firstName}
+                last_name={userData.lastName}
+                middle_name={userData.middleName}
+                branch_name={userData.branch}
+                university_name={userData.university}
+                mail={userData.email}
+                ph={userData.phone} />}
             <button className="btn-logout" onClick={confirmLogout}>Logout</button>
             <Modal
               modalVisible={showModal}
@@ -165,62 +146,57 @@ export default function Profile({ profileData, setProfileData }) {
           </div>
         </div>
       </div>
-
-      <div className="profile-content">
+      <div style={{ display: "flex", width: "100%", gap: "14px" }}>
         <div className="info-card">
           <h2>About Me</h2>
           <div className="info-list">
             <div className="info-row">
-              <Briefcase className="info-icon" size={18} />
-              <span>Student at {userData.university}</span>
-            </div>
-            <div className="info-row">
-              <MapPin className="info-icon" size={18} />
-              <span>Kolkata, West Bengal</span>
+              <Phone className="info-icon" size={18} />
+              <span>+91 {userData.phone}</span>
             </div>
             <div className="info-row">
               <Mail className="info-icon" size={18} />
               <span>{userData.email}</span>
             </div>
             <div className="info-row">
-              <Phone className="info-icon" size={18} />
-              <span>+91 {userData.phone}</span>
+              <Briefcase className="info-icon" size={18} />
+              <span>Student at {userData.university}</span>
             </div>
           </div>
         </div>
-    </div>  
 
-       <div className="recent-activity-card">
-  <h2>Recent Activity</h2>
+        <div className="recent-activity-card">
+          <h2>Recent Activity</h2>
 
-  <div className="activity-timeline">
-    {recentActivities.length === 0 ? (
-      <div className="activity-empty">
-        <p>No Recent Activities</p>
-      </div>
-    ) : (
-      recentActivities.map((activity) => (
-        <div
-        className="activity-item"
-        key={activity.id}
-        >
-          <div className="activity-dot"></div>
+          <div className="activity-timeline">
+            {recentActivities.length === 0 ? (
+              <div className="activity-empty">
+                <p>No Recent Activities</p>
+              </div>
+            ) : (
+              recentActivities.map((activity) => (
+                <div
+                  className="activity-item"
+                  key={activity.id}
+                >
+                  <div className="activity-dot"></div>
 
-          <div className="activity-details">
-            <p>
-              Completed{" "}
-              <strong>{activity.title}</strong>
-            </p>
+                  <div className="activity-details">
+                    <p>
+                      Completed{" "}
+                      <strong>{activity.title}</strong>
+                    </p>
 
-            <span className="activity-time">
-              {activity.course}
-            </span>
+                    <span className="activity-time">
+                      {activity.course}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      ))
-    )}
-  </div>
-</div>
-</div>
+      </div>
+    </div>
   );
 }

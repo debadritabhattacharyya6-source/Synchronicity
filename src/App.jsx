@@ -167,7 +167,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard profileData={profileData} />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/deadlines" element={<Deadlines theme={theme} />} />
+          <Route path="/deadlines" element={<Deadlines />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/collaboration" element={<Collaborations />} />
           <Route path="/profile" element={<Profile profileData={profileData} setProfileData={setProfileData} />} />

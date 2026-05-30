@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
+import './Deadlines.css';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import { auth, db } from "/src/assets/firebase";
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +8,6 @@ import { doc, getDoc, runTransaction, onSnapshot } from 'firebase/firestore';
 
 export default function Dashboard({ profileData }) {
   const [userData, setUserData] = useState(null);
-  // Dynamic Mock Data
   const [stats, setStats] = useState({
     dueThisWeek: 0,
     highPriority: 0,
@@ -64,8 +64,6 @@ export default function Dashboard({ profileData }) {
       productivityScore: productivityScore,
     });
 
-    // Generate random heatmap data (35 cells for 7x5 grid)
-    // 0 = empty, 1 = low, 2 = medium, 3 = high
     const generatedData = Array(35).fill(0).map((day, index) => {
       const rand = Math.random();
       const today = new Date();
@@ -73,10 +71,10 @@ export default function Dashboard({ profileData }) {
       dayOfMap.setDate(today.getDate() + index);
       let heat = 0;
       userData?.deadlines?.forEach((deadline) => {
-        if(deadline.dueDate === dayOfMap.toLocaleDateString('en-CA')){
-          if(deadline.type === 'exam')
+        if (deadline.dueDate === dayOfMap.toLocaleDateString('en-CA')) {
+          if (deadline.type === 'exam')
             heat += 3;
-          else if(deadline.type === 'assignment')
+          else if (deadline.type === 'assignment')
             heat += 2;
           else
             heat += 1;
@@ -86,6 +84,85 @@ export default function Dashboard({ profileData }) {
     });
     setHeatmapData(generatedData);
   }, [userData]);
+
+  useEffect(() => {
+    const unsubscribe = async () => {
+      try {
+        const userDoc = doc(db, "users", auth.currentUser.uid);
+        await runTransaction(db, async (transaction) => {
+          const docRef = await transaction.get(userDoc);
+          if (!docRef.exists()) throw "User does not exist";
+          const existingCompletedDeadlines = docRef.data().completedDeadlines || [];
+          const todayMidnight = new Date();
+          todayMidnight.setHours(0, 0, 0, 0);
+          const newDeadlineArray = existingCompletedDeadlines.filter((deadline) => {
+            const [year, month, day] = deadline.dueDate.split('-').map(Number);
+
+            const deadlineMidnight = new Date(year, month - 1, day);
+            deadlineMidnight.setHours(0, 0, 0, 0);
+
+            const diffTime = -deadlineMidnight.getTime() + todayMidnight.getTime();
+            const daysExceeded = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (daysExceeded > 7) {
+              return false;
+            }
+            return true;
+          });
+          transaction.update(userDoc, { completedDeadlines: newDeadlineArray });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = async () => {
+      try {
+        const userDoc = doc(db, "users", auth.currentUser.uid);
+        await runTransaction(db, async (transaction) => {
+          const docRef = await transaction.get(userDoc);
+          if (!docRef.exists()) throw "User does not exist";
+          const existingDeadlines = docRef.data().deadlines || [];
+          const todayMidnight = new Date();
+          todayMidnight.setHours(0, 0, 0, 0);
+          const newDeadlineArray = existingDeadlines.map((deadline) => {
+            const [year, month, day] = deadline.dueDate.split('-').map(Number);
+
+            const deadlineMidnight = new Date(year, month - 1, day);
+            deadlineMidnight.setHours(0, 0, 0, 0);
+
+            const diffTime = deadlineMidnight.getTime() - todayMidnight.getTime();
+            const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (daysLeft >= 14) {
+              return {
+                ...deadline,
+                urgency: "low"
+              }
+            }
+            else if(daysLeft >= 7 && daysLeft< 14){
+              return {
+                ...deadline,
+                urgency: "medium"
+              }
+            }
+            else{
+              return {
+                ...deadline,
+                urgency: "high"
+              }
+            }
+            return true;
+          });
+          transaction.update(userDoc, { deadlines: newDeadlineArray });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    return () => unsubscribe();
+  }, []);
 
   const getRelativeTimeText = (dateString) => {
     if (!dateString) return "No date";
@@ -144,6 +221,8 @@ export default function Dashboard({ profileData }) {
         color: colorMap[deadline.urgency] || 'blue',
       };
     });
+
+  const deadlineExists = deadlines.length !== 0
 
   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -204,7 +283,7 @@ export default function Dashboard({ profileData }) {
           </div>
 
           <div className="deadlines-list">
-            {deadlines.map((item) => (
+            {deadlineExists && deadlines.map((item) => (
               <div className="deadline-item" key={item.id}>
                 <div className={`deadline-indicator indicator-${item.color}`}></div>
                 <div className="deadline-content">
@@ -219,6 +298,10 @@ export default function Dashboard({ profileData }) {
                 </div>
               </div>
             ))}
+            {!deadlineExists && <div className='no-deadline-container'>
+              <img src={`/src/assets/relax.png`} style={{ transform: "scale(0.7)", filter: "none"}} />
+              <h2 style={{ fontFamily: "\"Cinzel\", serif", fontSize: "20px"}}>Yay!</h2>
+              <p style={{fontSize: "15px"}}>No Deadlines</p></div>}
           </div>
         </div>
 

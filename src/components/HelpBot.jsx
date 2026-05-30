@@ -1,48 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Mic, MicOff, Send, X, Sliders, Volume2, VolumeX, Database, HelpCircle, Key } from 'lucide-react';
 import { auth, db } from '../assets/firebase';
-import { doc, getDoc, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, runTransaction, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
 import './HelpBot.css';
 
 
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+
+const GEMINI_API_KEY = import.meta.env.VITE_GCP_API_KEY;
 
 export default function HelpBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isWakeWordMode, setIsWakeWordMode] = useState(true);
   const [messages, setMessages] = useState([
-    { id: 1, text: "Hi! I am Sync Space Assistant. Say 'Sync Space' to activate me, or ask me directly about your deadlines!", sender: 'bot' }
+    { id: 1, text: "Hi! I am SyncBot. Click the microphone to speak, or ask me directly about your deadlines!", sender: 'bot' }
   ]);
   const [inputText, setInputText] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [wakeWord, setWakeWord] = useState("sync space");
+  const [apiKey, setApiKey] = useState(GEMINI_API_KEY);
   const [speechEnabled, setSpeechEnabled] = useState(true);
-  const [statusText, setStatusText] = useState("Listening for wake word...");
+  const [statusText, setStatusText] = useState("Click microphone to speak.");
 
   const recognitionRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
   const utteranceRef = useRef(null);
   const messagesEndRef = useRef(null);
   const isListeningRef = useRef(isListening);
-  const isWakeWordModeRef = useRef(isWakeWordMode);
-  const wakeWordRef = useRef(wakeWord);
 
   useEffect(() => { isListeningRef.current = isListening; }, [isListening]);
-  useEffect(() => { isWakeWordModeRef.current = isWakeWordMode; }, [isWakeWordMode]);
-  useEffect(() => { wakeWordRef.current = wakeWord; }, [wakeWord]);
 
   // Load API Key & settings from localStorage or import.meta.env
   useEffect(() => {
     const savedKey = (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY_HERE")
       ? GEMINI_API_KEY
       : localStorage.getItem('syncspace_gemini_key') || import.meta.env.VITE_GEMINI_API_KEY || "";
-    const savedWake = localStorage.getItem('syncspace_wakeword') || "sync space";
     setApiKey(savedKey);
-    setWakeWord(savedWake);
   }, []);
 
   // Auto-scroll to bottom of chat
@@ -61,7 +54,7 @@ export default function HelpBot() {
     let rec;
     try {
       rec = new SpeechRecognition();
-      rec.continuous = true;
+      rec.continuous = false;
       rec.interimResults = false;
       rec.lang = 'en-US';
     } catch (e) {
@@ -72,76 +65,42 @@ export default function HelpBot() {
 
     rec.onstart = () => {
       setIsListening(true);
+      setStatusText("Listening...");
     };
 
     rec.onend = () => {
-      // Automatically restart listening if wake-word monitoring is active
-      if (isListeningRef.current && isWakeWordModeRef.current) {
-        try {
-          rec.start();
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        setIsListening(false);
-      }
+      setIsListening(false);
+      setStatusText("Click microphone to speak.");
     };
 
     rec.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
       if (event.error === 'not-allowed') {
         setStatusText("Microphone permission denied.");
-        setIsListening(false);
+      } else {
+        setStatusText("Speech error. Try again.");
       }
+      setIsListening(false);
     };
 
     rec.onresult = async (event) => {
       const resultIndex = event.resultIndex;
-      const transcript = event.results[resultIndex][0].transcript.trim().toLowerCase();
+      const transcript = event.results[resultIndex][0].transcript.trim();
       console.log("Transcribed speech:", transcript);
 
-      if (isWakeWordModeRef.current) {
-        if (transcript.includes(wakeWordRef.current.toLowerCase()) || transcript.includes("hey sync")) {
-          // Play a beautiful synthesized chime to notify wake-up
-          speakText("Yes, I am listening.");
-          setIsOpen(true);
-          setIsWakeWordMode(false); // Switch to command capture mode
-          setStatusText("Listening for command...");
+      if (transcript.length > 1) {
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          text: transcript,
+          sender: 'user'
+        }]);
 
-          // Flash a temporary notification message in the chat
-          setMessages(prev => [...prev, {
-            id: Date.now(),
-            text: "[Wake Word Activated - Listening...]",
-            sender: 'system'
-          }]);
-        }
-      } else {
-        // We are capturing the actual command
-        if (transcript.length > 2) {
-          setMessages(prev => [...prev, {
-            id: Date.now(),
-            text: transcript,
-            sender: 'user'
-          }]);
-
-          // Re-enable wake word mode right after taking the command
-          setIsWakeWordMode(true);
-          setStatusText("Listening for wake word...");
-
-          // Process the transcribed query with Gemini
-          await processQuery(transcript);
-        }
+        // Process the transcribed query with Gemini
+        await processQuery(transcript);
       }
     };
 
     recognitionRef.current = rec;
-
-    // Start listening on mount
-    try {
-      rec.start();
-    } catch (e) {
-      console.error("Error starting speech recognition on mount:", e);
-    }
 
     return () => {
       if (recognitionRef.current) {
@@ -184,18 +143,87 @@ export default function HelpBot() {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      setIsListening(false);
-      setStatusText("Voice mode off.");
     } else {
-      setIsWakeWordMode(true);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
-          setStatusText("Listening for wake word...");
         } catch (e) {
           console.error(e);
         }
       }
+    }
+  };
+
+  const fetchWorkspacesList = async () => {
+    if (!auth.currentUser) return [];
+    try {
+      const q = query(
+        collection(db, "groups"),
+        where("memberIds", "array-contains", auth.currentUser.uid)
+      );
+      const querySnapshot = await getDocs(q);
+      const loadedGroups = [];
+      querySnapshot.forEach((doc) => {
+        loadedGroups.push(doc.data());
+      });
+      return loadedGroups;
+    } catch (e) {
+      console.error("Error fetching workspaces context:", e);
+    }
+    return [];
+  };
+
+  const fetchWorkspaceTasks = async () => {
+    if (!auth.currentUser) return {};
+    try {
+      const activeWorkspaces = await fetchWorkspacesList();
+      const loadedTasks = {};
+      for (const group of activeWorkspaces) {
+        const taskSnap = await getDoc(doc(db, "tasks", group.code));
+        if (taskSnap.exists()) {
+          loadedTasks[group.code] = taskSnap.data();
+        }
+      }
+      return loadedTasks;
+    } catch (e) {
+      console.error("Error fetching workspace tasks context:", e);
+    }
+    return {};
+  };
+
+  const createWorkspaceDirectly = async (title, membersCount, deadlineString) => {
+    if (!auth.currentUser) return false;
+    try {
+      // Generate random 4-digit code
+      const randomCode = `SYNC-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const newWorkspaceItem = {
+        title: title || "New Team",
+        maxMembers: Number(membersCount) || 5,
+        deadline: deadlineString || "No Deadline",
+        progress: 0,
+        code: randomCode,
+        ownerId: auth.currentUser.uid,
+        memberIds: [auth.currentUser.uid]
+      };
+
+      const emptyTasks = {
+        todo: [],
+        inprogress: [],
+        review: [],
+        completed: []
+      };
+
+      // Write to root 'groups' and 'tasks' collections
+      await setDoc(doc(db, "groups", randomCode), newWorkspaceItem);
+      await setDoc(doc(db, "tasks", randomCode), emptyTasks);
+
+      // Dispatch event to force other pages to refresh
+      window.dispatchEvent(new Event('collaborationsUpdated'));
+      return true;
+    } catch (err) {
+      console.error("Error creating workspace via Voice Assistant:", err);
+      return false;
     }
   };
 
@@ -369,30 +397,62 @@ export default function HelpBot() {
 
     try {
       const activeDeadlines = await fetchDeadlinesList();
+      const activeWorkspaces = await fetchWorkspacesList();
+
+      // Calculate real-time analytics dynamically
+      const totalDeadlines = activeDeadlines.length;
+      const completedDeadlines = activeDeadlines.filter(d => d.progress === 100).length;
+      const highPriority = activeDeadlines.filter(d => d.urgency === 'high').length;
+      const averageProgress = totalDeadlines > 0
+        ? Math.round(activeDeadlines.reduce((sum, d) => sum + (d.progress || 0), 0) / totalDeadlines)
+        : 0;
+
+      const courseDistribution = {};
+      activeDeadlines.forEach(d => {
+        const c = d.course || "General";
+        courseDistribution[c] = (courseDistribution[c] || 0) + 1;
+      });
+
+      const calculatedAnalytics = {
+        totalDeadlines,
+        completedDeadlines,
+        pendingDeadlines: totalDeadlines - completedDeadlines,
+        highPriority,
+        averageProgress,
+        courseDistribution
+      };
+
       const todayString = new Date().toLocaleDateString('en-CA');
       const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
       // Instruct Gemini to interpret voice instructions and return formatted JSON
       const systemInstructions = `
 You are SyncBot, the intelligent floating voice assistant for the Synchronicity application.
-Your target is to answer academic doubts, reply to deadline-related questions, and parse voice instructions to add or delete deadlines from the user's schedule.
+Your target is to answer academic doubts, reply to deadline-related questions, parse voice instructions to add/delete deadlines, handle task checkpoints, and manage collaboration workspaces.
 
 Today's Date: ${todayString} (${dayOfWeek})
+
+User's Computed Real-Time Analytics:
+${JSON.stringify(calculatedAnalytics, null, 2)}
 
 User's Existing Deadlines List:
 ${JSON.stringify(activeDeadlines, null, 2)}
 
+User's Active Collaboration Workspaces:
+${JSON.stringify(activeWorkspaces, null, 2)}
+
 You must classify the user's request into one of these intents:
 1. "ADD_DEADLINE": Use this if the user wants to schedule/add a new task, assignment, exam, or project.
 2. "DELETE_DEADLINE": Use this if the user wants to remove or delete a task/deadline.
-3. "QUERY_DEADLINES": Use this if the user is asking questions about what deadlines they have, when something is due, or how many tasks are pending.
+3. "QUERY_DEADLINES": Use this if the user is asking questions about what deadlines they have, when something is due, how many tasks are pending, or their workload analytics metrics.
 4. "ACADEMIC_DOUBT": Use this if the user asks any educational/conceptual doubt (e.g., explaining physics laws, math topics, coding bugs).
 5. "GENERAL_CONVERSATION": Simple greetings or general small talk.
-6. 'CHECK_CHECKPOINT': Use this if user wants to check off/complete a specific subtask or checkpoint of an existing deadline."
+6. "CHECK_CHECKPOINT": Use this if the user wants to check off/complete a specific subtask or checkpoint of an existing deadline.
+7. "CREATE_WORKSPACE": Use this if the user wants to create a new team, study group, or collaboration workspace.
 
 You MUST respond strictly in valid JSON format matching this schema:
 {
-  "intent": "ADD_DEADLINE" | "DELETE_DEADLINE" | "QUERY_DEADLINES" | "ACADEMIC_DOUBT" | "GENERAL_CONVERSATION" | "CHECK_CHECKPOINT",
+  "intent": "ADD_DEADLINE" | "DELETE_DEADLINE" | "QUERY_DEADLINES" | "ACADEMIC_DOUBT" | "GENERAL_CONVERSATION" | "CHECK_CHECKPOINT" | "CREATE_WORKSPACE",
   "response_text": "A brief, natural spoken response confirming the action or answering their query.",
   "extracted_data": {
     // Only required for ADD_DEADLINE:
@@ -402,12 +462,17 @@ You MUST respond strictly in valid JSON format matching this schema:
     "dueDate": "YYYY-MM-DD format. If the user said relative terms (e.g. 'next Friday', 'tomorrow', 'in 3 days'), calculate the absolute date based on ${todayString}",
     "time": "HH:MM format in 24hr format - default to '23:59' if not specified",
 
-    //required for CHECK POINT 
+    // Required for CHECK_CHECKPOINT:
     "deadline_title_query": "Name or subject keyword of the target deadline(e.g. 'Chemistry Assignment')",
     "checkpoint_title_query": "Name or keyword of the specific subtask/checkpoint to check off(e.g. 'Read chapter 5')",
 
     // Only required for DELETE_DEADLINE:
-    "title_query": "The name or subject keyword of the deadline to delete (e.g. 'Math Assignment')"
+    "title_query": "The name or subject keyword of the deadline to delete (e.g. 'Math Assignment')",
+
+    // Only required for CREATE_WORKSPACE:
+    "workspace_title": "Clean readable name for the new team / workspace",
+    "members_count": "Number of members in the team - default to 1 if not mentioned",
+    "workspace_deadline": "Due date or project deadline details (e.g., 'June 15' or 'No Deadline')"
   }
 }
 
@@ -474,6 +539,19 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
           finalSpeechText = `I couldn't complete that action. ${result.error || ""}`;
         }
       }
+      else if (intent === "CREATE_WORKSPACE" && parsedResult.extracted_data) {
+        const data = parsedResult.extracted_data;
+        const createSuccess = await createWorkspaceDirectly(
+          data.workspace_title,
+          data.members_count,
+          data.workspace_deadline
+        );
+        if (createSuccess) {
+          finalSpeechText = `I have successfully created your team workspace "${data.workspace_title}" with ${data.members_count || 1} members.`;
+        } else {
+          finalSpeechText = "Sorry, I ran into a database error trying to create that team workspace.";
+        }
+      }
 
       // Render response in Chat bubble and read out loud
       setMessages(prev => [...prev, {
@@ -509,11 +587,10 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
   const saveSettings = (e) => {
     e.preventDefault();
     localStorage.setItem('syncspace_gemini_key', apiKey);
-    localStorage.setItem('syncspace_wakeword', wakeWord);
     setShowSettings(false);
     setMessages(prev => [...prev, {
       id: Date.now(),
-      text: `Settings updated! Wake word configured to: "${wakeWord}".`,
+      text: `Settings updated successfully!`,
       sender: 'system'
     }]);
     speakText("Settings saved successfully.");
@@ -534,7 +611,7 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
         </button>
       )}
 
-      {/* 🔵 EXPANDED WIDGET */}
+      {/*  EXPANDED WIDGET */}
       {isOpen && (
         <div className="helpbot-container glass-panel">
           {/* Header */}
@@ -542,7 +619,7 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
             <div className="header-info">
               <Bot size={20} className="header-icon-avatar" />
               <div>
-                <h3>Sync Space AI</h3>
+                <h3>SyncBot</h3>
                 <span className="status-label">
                   {isThinking ? "Thinking..." : isSpeaking ? "Speaking..." : statusText}
                 </span>
@@ -599,17 +676,7 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
                 </div>
               )}
 
-              <div className="setting-field">
-                <label><Mic size={14} /> Wake Word</label>
-                <input
-                  type="text"
-                  value={wakeWord}
-                  onChange={(e) => setWakeWord(e.target.value)}
-                  placeholder="e.g. sync space"
-                  required
-                />
-                <small>Try saying '{wakeWord}' out loud when mic is green.</small>
-              </div>
+              {/* Wake Word setting field removed for standard click-to-talk speech recognition */}
 
               <div className="settings-actions">
                 <button type="submit" className="save-settings-btn">Save Configurations</button>
@@ -654,7 +721,7 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
               <form onSubmit={handleSendText} className="helpbot-input-bar">
                 <button
                   type="button"
-                  className={`mic-toggle-btn ${isListening ? 'active-mic' : ''} ${!isWakeWordMode ? 'active-command-mic' : ''}`}
+                  className={`mic-toggle-btn ${isListening ? 'active-mic' : ''}`}
                   onClick={toggleListening}
                   title={isListening ? "Turn Microphone Off" : "Turn Microphone On"}
                 >
