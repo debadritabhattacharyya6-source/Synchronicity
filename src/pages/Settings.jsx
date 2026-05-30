@@ -12,7 +12,7 @@ export default function Settings({ theme, setTheme }) {
   const faqs = [
      {
       q: "How does the Stress heatmap work?",
-      a: "Red shows more than three on day deadlines,yellow for two,green for one and blank shows nothing on due."
+      a: "for on day deadlines, Project has stress score 1,assignment 2 and Exams 3 . For Stress score being 3 or more than 3 the box turns red,yellow for 2,green for 1 and blank shows nothing on due."
     },
     {
       q: "How do I change theme?",
