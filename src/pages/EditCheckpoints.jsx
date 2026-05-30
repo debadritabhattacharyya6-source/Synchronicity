@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle, Trash } from 'lucide-react';
+import { CheckCircle, Trash, Trash2 } from 'lucide-react';
 import './Auth.css';
 import { auth, db } from "/src/assets/firebase"
 import { doc, runTransaction, updateDoc } from "firebase/firestore";
@@ -10,8 +10,6 @@ export default function Checkpoints({ data, onCancel }) {
     const [checkpoints, setCheckpoints] = useState(data.checkpoints);
     const [inputValue, setInputValue] = useState("");
 
-    const [isSubmitted, setIsSubmitted] = useState(false);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -20,18 +18,21 @@ export default function Checkpoints({ data, onCancel }) {
                 const docRef = await transaction.get(userDoc);
                 if (!docRef.exists()) throw "User does not exist";
                 const existingDeadlines = docRef.data().deadlines || [];
-                const nextId = existingDeadlines.length > 0
-                    ? Math.max(...existingDeadlines.map(o => o.id || 0)) + 1
-                    : 1;
+                const completedCheckpoints = checkpoints.filter((checkpoint) => checkpoint.completed);
+                const newProgress = (completedCheckpoints.length/checkpoints.length)*100;
                 const updatedItem = {
-                    id: nextId,
                     ...data,
+                    progress: newProgress,
                     checkpoints: checkpoints
                 }
-                const newDeadlineArray = [...existingDeadlines, updatedItem];
+                const newDeadlineArray = existingDeadlines.map((deadline) => {
+                    if (deadline.id === data.id) return updatedItem;
+                    else return deadline;
+                });
+                console.log(newDeadlineArray);
                 transaction.update(userDoc, { deadlines: newDeadlineArray });
             });
-            setIsSubmitted(true);
+            onCancel();
         } catch (err) {
             console.error(err);
         }
@@ -51,21 +52,6 @@ export default function Checkpoints({ data, onCancel }) {
         ]);
         setInputValue('');
     };
-
-    if (isSubmitted) {
-        return createPortal((
-            <div className="modal-overlay" onClick={onCancel}>
-                <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-                    <div className='modal-title'>
-                        <h2>Deadline Added</h2>
-                    </div>
-                    <div className='modal-buttons'>
-                        <button onClick={onCancel} className='modal-cancel'>Done</button>
-                    </div>
-                </div>
-            </div>
-        ), document.getElementById('root-portal'));
-    }
 
     return createPortal((
         <div className='auth-page' style={{
@@ -109,7 +95,7 @@ export default function Checkpoints({ data, onCancel }) {
                         ))}
                     </ul>
                     <button type="submit" className="auth-submit" style={{ marginTop: "20px" }}>
-                        SAVE DEADLINE
+                        SAVE CHECKPOINTS
                     </button>
                 </form>
             </div>

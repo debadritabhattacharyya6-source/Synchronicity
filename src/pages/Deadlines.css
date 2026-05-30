@@ -331,3 +331,21 @@
   height: 100%;
   position:absolute;
 }
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 40%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  color: rgb(200,0,0);
+  background: rgba(82, 183, 136, 0.1);
+}

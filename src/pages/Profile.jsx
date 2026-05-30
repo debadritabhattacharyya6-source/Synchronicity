@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react' ;
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "/src/assets/firebase";
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 import Modal from '/src/components/Modal';
@@ -22,6 +24,7 @@ export default function Profile({ profileData, setProfileData }) {
   });
   const [showModal, setShowModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [recentActivities, setRecentActivities] = useState([]);
 
   const navigate = useNavigate();
 
@@ -55,7 +58,37 @@ export default function Profile({ profileData, setProfileData }) {
       email: profileData?.email || user?.email || "",
       phone: profileData?.phone || "Not Set"
     });
-  }, [profileData]);
+     }, [profileData]);
+     useEffect(() => {
+  if (!auth.currentUser) return;
+
+  const userRef = doc(
+    db,
+    "users",
+    auth.currentUser.uid
+  );
+
+  const unsubscribe = onSnapshot(userRef, (snap) => {
+    if (!snap.exists()) return;
+
+    const userData = snap.data();
+
+    const completed =
+      userData.completedDeadlines || [];
+
+    const latestThree = [...completed]
+      .sort(
+        (a, b) =>
+          (b.completedAt || 0) -
+          (a.completedAt || 0)
+      )
+      .slice(0, 3);
+
+    setRecentActivities(latestThree);
+  });
+
+  return () => unsubscribe();
+}, []);
 
   return (
     <div className="profile-container">
@@ -155,34 +188,39 @@ export default function Profile({ profileData, setProfileData }) {
             </div>
           </div>
         </div>
+    </div>  
 
-        <div className="recent-activity-card">
-          <h2>Recent Activity</h2>
-          <div className="activity-timeline">
-            <div className="activity-item">
-              <div className="activity-dot"></div>
-              <div className="activity-details">
-                <p>Completed project <strong>Dashboard Redesign</strong></p>
-                <span className="activity-time">2 hours ago</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-dot"></div>
-              <div className="activity-details">
-                <p>Added a new feature to <strong>Task Manager</strong></p>
-                <span className="activity-time">Yesterday</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-dot"></div>
-              <div className="activity-details">
-                <p>Commented on <strong>Backend API Specs</strong></p>
-                <span className="activity-time">3 days ago</span>
-              </div>
-            </div>
+       <div className="recent-activity-card">
+  <h2>Recent Activity</h2>
+
+  <div className="activity-timeline">
+    {recentActivities.length === 0 ? (
+      <div className="activity-empty">
+        <p>No Recent Activities</p>
+      </div>
+    ) : (
+      recentActivities.map((activity) => (
+        <div
+        className="activity-item"
+        key={activity.id}
+        >
+          <div className="activity-dot"></div>
+
+          <div className="activity-details">
+            <p>
+              Completed{" "}
+              <strong>{activity.title}</strong>
+            </p>
+
+            <span className="activity-time">
+              {activity.course}
+            </span>
           </div>
         </div>
-      </div>
-    </div>
+      ))
+    )}
+  </div>
+</div>
+</div>
   );
 }
