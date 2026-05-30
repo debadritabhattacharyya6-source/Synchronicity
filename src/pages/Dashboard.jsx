@@ -108,7 +108,7 @@ export default function Dashboard({ profileData }) {
             }
             return true;
           });
-          transaction.update(userDoc, { deadlines: newDeadlineArray });
+          transaction.update(userDoc, { completedDeadlines: newDeadlineArray });
         });
         setIsSubmitted(true);
       } catch (err) {
