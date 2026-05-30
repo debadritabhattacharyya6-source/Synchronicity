@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import "./Collaborations.css";
+import { db } from "../assets/firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 
 export default function CollaborationPage() {
 
@@ -21,11 +28,41 @@ const[newTeam, setNewTeam]=useState({
     deadline:"",
     
 })
+useEffect(() => {
 
+  const fetchGroups = async () => {
+
+    try {
+
+      const querySnapshot =
+        await getDocs(
+          collection(db, "groups")
+        );
+
+      const loadedGroups = [];
+
+      querySnapshot.forEach((doc) => {
+
+        loadedGroups.push(doc.data());
+
+      });
+
+      setGroups(loadedGroups);
+
+    } catch (error) {
+
+      console.log(error);
+      alert(error);
+    }
+  };
+
+  fetchGroups();
+
+}, []);
 const tasks =
   workspaceTasks[activeWorkspace] || {
     todo: [],
-    progress: [],
+    inprogress: [],
     review: [],
     completed: [],
   };
@@ -40,7 +77,7 @@ const [newTask, setNewTask] =
     due: "",
     priority: "",
   });
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
 
   if (
     !newTask.title ||
@@ -51,23 +88,52 @@ const [newTask, setNewTask] =
     return;
   }
 
-  setWorkspaceTasks(prev => ({
+  const updatedTasks = {
 
-    ...prev,
+    ...workspaceTasks,
 
     [activeWorkspace]: {
 
-      ...prev[activeWorkspace],
+      ...workspaceTasks[activeWorkspace],
 
       todo: [
-        ...prev[activeWorkspace].todo,
+  ...(workspaceTasks[activeWorkspace]|| {
+  todo: [],
+  inprogress: [],
+  review: [],
+  completed: [],
+}),
 
         {
           ...newTask,
         },
       ],
     },
-  }));
+  };
+
+  setWorkspaceTasks(updatedTasks);
+
+  try {
+
+    await setDoc(
+
+      doc(
+        db,
+        "tasks",
+        foundGroup.code
+      ),
+
+      updatedTasks[
+        foundGroup.code
+      ]
+
+    );
+
+  } catch (error) {
+
+    console.log(error);
+    alert(error.message);
+  }
 
   setNewTask({
     title: "",
@@ -78,7 +144,41 @@ const [newTask, setNewTask] =
 
   setShowTaskModal(false);
 };
+useEffect(() => {
 
+  const fetchTasks = async () => {
+
+    try {
+
+      const querySnapshot =
+        await getDocs(
+          collection(db, "tasks")
+        );
+
+      const loadedTasks = {};
+
+      querySnapshot.forEach((doc) => {
+
+        loadedTasks[doc.id] =
+          doc.data();
+
+      });
+
+      setWorkspaceTasks(
+        loadedTasks
+      );
+
+    } catch (error) {
+
+      console.log(error);
+      alert(error.message);
+
+    }
+  };
+
+  fetchTasks();
+
+}, []);
  
 const [joinCode, setJoinCode] =
   useState("");
@@ -116,10 +216,10 @@ const calculateProgress = (workspaceName) => {
   if (!workspace) return 0;
 
   const totalTasks =
-    workspace.todo.length +
-    workspace.progress.length +
-    workspace.review.length +
-    workspace.completed.length;
+    (workspace.todo?.length||0) +
+    (workspace.inprogress?.length||0) +
+    (workspace.review?.length||0) +
+    (workspace.completed?.length||0);
 
   if (totalTasks === 0) return 0;
 
@@ -166,49 +266,77 @@ const generateCode = () => {
   return `SYNC-${random}`;
 };
 
-const handleCreateTeam=()=>{
-    if(
-        !newTeam.title||
-        !newTeam.members||
-        !newTeam.deadline
-        
-    ){return;}
+const handleCreateTeam = async () => {
 
-    const createdTeam={
-        title: newTeam.title,
-        members: Number(newTeam.members),
-        deadline: newTeam.deadline,
-        progress: 0,
-        code: generateCode(),
-    }
+  if (
+    !newTeam.title ||
+    !newTeam.members ||
+    !newTeam.deadline
+  ) {
+    alert("Fill all fields");
+    return;
+  }
 
-    setGroups([...groups, createdTeam]);
+  const code = generateCode();
 
-     setWorkspaceTasks(prev => ({
-  ...prev,
+  const createdTeam = {
+    title: newTeam.title,
+    members: Number(newTeam.members),
+    deadline: newTeam.deadline,
+    progress: 0,
+    code,
+  };
 
-  [newTeam.title]: {
+  const emptyTasks = {
     todo: [],
-    progress: [],
+    inprogress: [],
     review: [],
     completed: [],
-  },
-}));
-    setActiveWorkspace(newTeam.title);
+  };
+
+  try {
+
+    await setDoc(
+      doc(db, "groups", code),
+      createdTeam
+    );
+
+    await setDoc(
+      doc(db, "tasks", code),
+      emptyTasks
+    );
+
+    setGroups(prev => [
+      ...prev,
+      createdTeam,
+    ]);
+
+    setWorkspaceTasks(prev => ({
+      ...prev,
+      [code]: emptyTasks,
+    }));
+
+    setActiveWorkspace(code);
 
     setNewTeam({
-    title: "",
-    members: "",
-    deadline: "",
-    progress: "",
-  });
+      title: "",
+      members: "",
+      deadline: "",
+    });
 
-  setShowModal(false);
+    setShowModal(false);
+
+  } catch (error) {
+
+    console.log(error);
+    alert(error.message);
+
+  }
 };
 const activeGroup =
   groups.find(
     group =>
-      group.title === activeWorkspace
+      group.code === activeWorkspace
   );
   return (
     <div className="collab-page">
@@ -305,19 +433,19 @@ const activeGroup =
             {groups.map((group, index) => {
 
             const status =
-                getProgressColor(calculateProgress(group.title));
+                getProgressColor(calculateProgress(group.code));
 
             return (
 
                 <div
                 className={`group-card ${
-                  activeWorkspace === group.title
+                  activeWorkspace === group.code
                     ? "active-group"
                     : ""
                 }`}
                 key={index}
                  onClick={() =>
-                  setActiveWorkspace(group.title)
+                  setActiveWorkspace(group.code)
                 }
                 >
 
@@ -331,7 +459,7 @@ const activeGroup =
                         
                     }}
                     >
-                    {calculateProgress(group.title)}%
+                    {calculateProgress(group.code)}%
                     </span>
 
                 </div>
@@ -345,7 +473,7 @@ const activeGroup =
                     <div
                     className="progress-fill"
                     style={{
-                        width: `${calculateProgress(group.title)}%`,
+                        width: `${calculateProgress(group.code)}%`,
                         background: status.gradient,
                         boxShadow:
                         `0 0 18px ${status.border}`,
@@ -387,7 +515,7 @@ const activeGroup =
   <>
      <div>
 
-          <h2>{activeWorkspace}</h2>
+          <h2>{activeGroup?.title}</h2>
 
           <p>
             Active collaboration workspace
@@ -477,7 +605,7 @@ const activeGroup =
 
             <h3>In Progress</h3>
 
-            {tasks.progress.map((task, i) => (
+            {tasks.inprogress.map((task, i) => (
 
                 <div
                 className="task-card"
