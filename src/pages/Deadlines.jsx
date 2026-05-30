@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useTransition } from 'react';
-import { Calendar, Clock, AlertCircle, FileText, CheckCircle, Search, Filter } from 'lucide-react';
+import React, { use, useEffect, useState, useTransition } from 'react';
+import { Calendar, Clock, AlertCircle, FileText, CheckCircle, Search, Filter, Trash } from 'lucide-react';
 import NewDeadline from './NewDeadline';
 import Checkpoints from './Checkpoints';
 import CompleteCheckpoints from './CompleteCheckpoints';
@@ -14,7 +14,7 @@ const URGENCY_WEIGHTS = {
   low: 1
 };
 
-export default function Deadlines({ theme }) {
+export default function Deadlines({}) {
   const [userData, setUserData] = useState(null);
   const [filter, setFilter] = useState('all'); // all, assignment, exam, project
   const [newDeadline, setNewDeadline] = useState(false);
@@ -23,6 +23,8 @@ export default function Deadlines({ theme }) {
   const [deadline, setDeadline] = useState(null);
   const [tempData, setTempData] = useState(null);
   const [sortByUrgency, setSortByUrgency] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
 
   const getUserdata = async () => {
     try {
@@ -55,15 +57,22 @@ export default function Deadlines({ theme }) {
 
   const deadlineExists = allDeadlines.length > 0;
 
-  const filteredDeadlines = filter === 'all'
-    ? allDeadlines
-    : allDeadlines.filter(d => d.type === filter);
+  const filteredDeadlines = allDeadlines.filter((deadline) => {
+    const typeMatch = filter === 'all' || deadline.type === filter;
+    const query = searchQuery.toLowerCase().trim();
 
-    const displayedDeadlines = sortByUrgency
-     ?[...filteredDeadlines].sort((a,b) => {
+    const matchesCourse = deadline.course.toLowerCase().includes(query);
+    const matchesTitle = deadline.title.toLowerCase().includes(query);
+    const matchesSearch = query === "" || matchesCourse || matchesTitle;
+
+    return matchesSearch && typeMatch;
+  });
+
+  const displayedDeadlines = sortByUrgency
+    ? [...filteredDeadlines].sort((a, b) => {
       return (URGENCY_WEIGHTS[b.urgency] || 0) - (URGENCY_WEIGHTS[a.urgency] || 0);
-     })
-     :filteredDeadlines;
+    })
+    : filteredDeadlines;
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
@@ -107,6 +116,31 @@ export default function Deadlines({ theme }) {
     }
   };
 
+  const onDelete = async () => {
+    let idToBeDeleted = deadline.id;
+    const userDoc = doc(db, "users", auth.currentUser.uid);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const docRef = await transaction.get(userDoc);
+        if (!docRef.exists()) throw "User does not exist";
+        const existingDeadlines = docRef.data().deadlines || [];
+
+        const newDeadlineArray = existingDeadlines.filter((item) => item.id !== idToBeDeleted);
+
+        transaction.update(userDoc, { deadlines: newDeadlineArray });
+      });
+      setConfirmDeleteVisible(false);
+    }
+    catch (err) {
+      console.error(err);
+    }
+  };
+
+  const confirmDelete = (deadline) => {
+    setConfirmDeleteVisible(true);
+    setDeadline(deadline);
+  };
+
   const confirmComplete = (deadline) => {
     setConfirmCompleteVisible(true);
     setDeadline(deadline);
@@ -118,6 +152,22 @@ export default function Deadlines({ theme }) {
     setNewCheckpoints(true);
   };
 
+  const searchDeadline = (value) => {
+
+  };
+
+  if (confirmDeleteVisible) {
+    return (<Modal
+      modalVisible={confirmDeleteVisible}
+      title="Are you sure?"
+      onConfirm={onDelete}
+      onCancel={() => setConfirmDeleteVisible(false)}
+      confirmText='Delete'
+    >
+      <p>This Deadline will be deleted</p>
+    </Modal>);
+  }
+  
   if (confirmCompleteVisible) {
     return (<CompleteCheckpoints onCancel={() => setConfirmCompleteVisible(false)} deadline={deadline}></CompleteCheckpoints>);
   }
@@ -135,7 +185,7 @@ export default function Deadlines({ theme }) {
             <input
               type="text"
               placeholder="Search deadlines..."
-              
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
 
           </div>
@@ -172,11 +222,11 @@ export default function Deadlines({ theme }) {
             Exams
           </button>
         </div>
-        <button 
+        <button
           className={`sort-btn ${sortByUrgency ? 'active' : ''}`}
           onClick={() => setSortByUrgency(!sortByUrgency)}
         >
-          <Filter size={16} /> {sortByUrgency ? 'Sorted by Urgency' : 'Sort By'}
+          <Filter size={16}/> <label>{sortByUrgency ? 'Sorted by Urgency' : 'Sort By Urgency'}</label>
         </button>
       </div>
 
@@ -213,21 +263,25 @@ export default function Deadlines({ theme }) {
                 <span>{deadline.time}</span>
               </div>
             </div>
-
-            <div className="progress-section">
-              <div className="progress-header">
-                <span className="progress-label">Progress</span>
-                <span className="progress-value">{deadline.progress}%</span>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "14px" }}>
+              <div className="progress-section">
+                <div className="progress-header">
+                  <span className="progress-label">Progress</span>
+                  <span className="progress-value">{deadline.progress}%</span>
+                </div>
+                <div className="progress-bar-bg">
+                  <div
+                    className="progress-bar-fill"
+                    style={{
+                      width: `${deadline.progress}%`,
+                      backgroundColor: getUrgencyColor(deadline.urgency)
+                    }}
+                  ></div>
+                </div>
               </div>
-              <div className="progress-bar-bg">
-                <div
-                  className="progress-bar-fill"
-                  style={{
-                    width: `${deadline.progress}%`,
-                    backgroundColor: getUrgencyColor(deadline.urgency)
-                  }}
-                ></div>
-              </div>
+              <button className='delete-btn' title='Delete deadline' onClick={() => confirmDelete(deadline)}>
+                <Trash />
+              </button>
             </div>
           </div>
         ))}
@@ -242,7 +296,7 @@ export default function Deadlines({ theme }) {
         height: "450px"
       }}>
         {!deadlineExists && <div className='no-deadline-container'>
-          <img src={`/src/assets/relax${theme === "dark" ? "" : "-light"}.png`} style={{ filter: "none" }} />
+          <img src={`/src/assets/relax.png`} style={{ filter: "none" }} />
           <h2 style={{ fontFamily: "\"Cinzel\", serif" }}>Yay!</h2>
           <p>No Deadlines</p></div>}
       </div>

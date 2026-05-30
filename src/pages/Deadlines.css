@@ -1,12 +1,19 @@
 .deadlines-container {
   padding: 24px;
   animation: fadeIn 0.4s ease-out;
-  position:relative;
+  position: relative;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .deadlines-header-section {
@@ -130,6 +137,10 @@
   transition: all 0.2s;
 }
 
+.sort-btn.active{
+  background-color: rgba(100, 255, 150, 0.4);
+}
+
 .sort-btn:hover {
   border-color: var(--mint-strong);
 }
@@ -236,6 +247,7 @@
 
 .progress-section {
   margin-top: auto;
+  flex-grow: 1;
 }
 
 .progress-header {
@@ -290,46 +302,46 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .header-actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-bar input {
     width: 100%;
   }
-  
+
   .filters-section {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .filter-tabs {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 4px;
   }
-  
+
   .filter-tab {
     white-space: nowrap;
   }
-  
+
   .sort-btn {
     align-self: flex-end;
   }
 }
 
-.no-deadline-container{
+.no-deadline-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  position:absolute;
+  position: absolute;
 }
 
 .delete-btn {
@@ -346,6 +358,6 @@
 }
 
 .delete-btn:hover {
-  color: rgb(200,0,0);
+  color: rgb(200, 0, 0);
   background: rgba(82, 183, 136, 0.1);
 }
