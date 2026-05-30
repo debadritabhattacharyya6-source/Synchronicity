@@ -40,6 +40,12 @@
     #d3f8d9 0%,
     #c1f9d7 100%
   );
+
+  --mint-strong: #10241b;
+  --mint: #134f31;
+  --celadon: #1e3526;
+  --frosted-mint: #102614;
+
   --bg-sidebar: #e6f4ee;
   --bg-card: #ffffff;
 

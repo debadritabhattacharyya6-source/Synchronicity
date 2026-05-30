@@ -253,6 +253,15 @@ export default function CollaborationPage() {
 
     return Math.round((workspace.completed.length / totalTasks) * 100);
   };
+  const overallProgress =
+    groups.length === 0
+      ? 0
+      : Math.round(
+          groups.reduce(
+            (total, group) => total + calculateProgress(group.code),
+            0,
+          ) / groups.length,
+        );
 
   const getProgressColor = (progress) => {
     if (progress >= 70) {
@@ -472,24 +481,30 @@ export default function CollaborationPage() {
             <div
               className="progress-circle"
               style={{
-                borderColor: getProgressColor(84).color,
+                borderColor: getProgressColor(overallProgress).color,
 
-                boxShadow: `0 0 35px ${getProgressColor(84).border}`,
+                boxShadow: `0 0 35px ${getProgressColor(overallProgress).border}`,
 
                 background: `radial-gradient(circle,
-            ${getProgressColor(84).bg},
+            ${getProgressColor(overallProgress).bg},
             transparent 72%)`,
               }}
             >
-              <span>84%</span>
+              <span>{overallProgress}%</span>
             </div>
 
             <p
               style={{
-                color: getProgressColor(84).color,
+                color: getProgressColor(overallProgress).color,
               }}
             >
-              Low urgency • On track
+              {overallProgress >= 80
+                ? "Excellent Progress"
+                : overallProgress >= 50
+                  ? "On Track"
+                  : overallProgress >= 25
+                    ? "Needs Attention"
+                    : "Just Started"}
             </p>
           </div>
         </div>

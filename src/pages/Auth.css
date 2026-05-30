@@ -45,7 +45,7 @@
 }
 
 .auth-title {
-  color: var(--celadon);
+  color: var(--text-primary);
   font-family: "Cinzel", serif;
   margin-bottom: 30px;
   font-size: 24px;
@@ -181,7 +181,7 @@
   place-content: center;
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
-  border: 1.5px solid rgba(168, 255, 203, 0.5);
+  border: 1.5px solid var(--mint);
   box-shadow: 0 0 5px rgba(168, 255, 203, 0.8);
   transform: rotate(45deg);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -196,7 +196,7 @@
 
 input[type='radio'] {
   appearance: none !important;
-  accent-color: #449973;
+  accent-color: var(--frosted-mint);
   background-color: transparent;
   width: 1.15em !important;
   border-radius: 0%;
@@ -206,7 +206,7 @@ input[type='radio'] {
   box-sizing: border-box;
   aspect-ratio: 1/1;
   position: relative;
-  border-color: rgba(168, 255, 203, 0.5);
+  border-color: var(--mint);
 }
 
 input[type='radio']:checked {
@@ -256,7 +256,7 @@ ul.auth-bullets li {
 }
 
 .checkpoint-input::placeholder {
-  color: rgba(168, 255, 203, 0.4);
+  color: var(--chart-axis);
   font-size: 18px;
 }
 
