@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
-import { auth } from "/src/assets/firebase"
+import { auth, db } from "/src/assets/firebase";
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc, runTransaction, onSnapshot } from 'firebase/firestore';
 
 export default function Dashboard({ profileData }) {
+  const [userData, setUserData] = useState(null);
   // Dynamic Mock Data
   const [stats, setStats] = useState({
     dueThisWeek: 0,
@@ -13,9 +15,9 @@ export default function Dashboard({ profileData }) {
     productivityScore: 0,
   });
 
-  const greetingName = profileData?.firstName || 
-    (auth.currentUser?.displayName ? auth.currentUser.displayName.split(" ")[0] : 
-    (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
+  const greetingName = profileData?.firstName ||
+    (auth.currentUser?.displayName ? auth.currentUser.displayName.split(" ")[0] :
+      (auth.currentUser?.email ? auth.currentUser.email.split("@")[0] : "User"));
 
   const navigate = useNavigate();
   const viewAll = () => {
@@ -24,12 +26,42 @@ export default function Dashboard({ profileData }) {
   const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {
-    // Simulate fetching dynamic data
+    if (auth.currentUser) {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
+      }, (err) => {
+        console.error(err);
+      });
+      return () => unsubscribe();
+    }
+  }, []);
+
+  useEffect(() => {
+    const today = new Date();
+    const nextWeekDate = new Date();
+    nextWeekDate.setDate(today.getDate() + 7);
+
+    const dueThisWeek = userData?.deadlines?.filter((deadline) => {
+      const todayMs = today.getTime();
+      const nextWeekDateMs = nextWeekDate.getTime();
+      const dueDateMs = new Date(deadline.dueDate).getTime();
+
+      if(dueDateMs >= todayMs && dueDateMs <= nextWeekDateMs){
+        return deadline;
+      }
+    }).length;
+    const highPriority = userData?.deadlines?.filter((deadline) => deadline.urgency === 'high').length;
+    const tasksCompleted = userData?.completedDeadlines?.length;
+    const productivityScore = Math.ceil((tasksCompleted*100)/(userData?.deadlines.length + tasksCompleted));
+
     setStats({
-      dueThisWeek: 5,
-      highPriority: 3,
-      tasksCompleted: 12,
-      productivityScore: 85,
+      dueThisWeek: dueThisWeek,
+      highPriority: highPriority,
+      tasksCompleted: tasksCompleted,
+      productivityScore: productivityScore,
     });
 
     // Generate random heatmap data (35 cells for 7x5 grid)
@@ -42,7 +74,7 @@ export default function Dashboard({ profileData }) {
       return 0; // Empty
     });
     setHeatmapData(generatedData);
-  }, []);
+  }, [userData]);
 
   const deadlines = [
     {
