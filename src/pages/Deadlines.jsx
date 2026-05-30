@@ -8,6 +8,12 @@ import './Deadlines.css';
 import { auth, db } from '/src/assets/firebase'
 import { doc, getDoc, runTransaction, onSnapshot } from 'firebase/firestore';
 
+const URGENCY_WEIGHTS = {
+  high: 3,
+  medium: 2,
+  low: 1
+};
+
 export default function Deadlines({ theme }) {
   const [userData, setUserData] = useState(null);
   const [filter, setFilter] = useState('all'); // all, assignment, exam, project
@@ -16,6 +22,7 @@ export default function Deadlines({ theme }) {
   const [confirmCompleteVisible, setConfirmCompleteVisible] = useState(false);
   const [deadline, setDeadline] = useState(null);
   const [tempData, setTempData] = useState(null);
+  const [sortByUrgency, setSortByUrgency] = useState(false);
 
   const getUserdata = async () => {
     try {
@@ -51,6 +58,12 @@ export default function Deadlines({ theme }) {
   const filteredDeadlines = filter === 'all'
     ? allDeadlines
     : allDeadlines.filter(d => d.type === filter);
+
+    const displayedDeadlines = sortByUrgency
+     ?[...filteredDeadlines].sort((a,b) => {
+      return (URGENCY_WEIGHTS[b.urgency] || 0) - (URGENCY_WEIGHTS[a.urgency] || 0);
+     })
+     :filteredDeadlines;
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
@@ -159,13 +172,16 @@ export default function Deadlines({ theme }) {
             Exams
           </button>
         </div>
-        <button className="sort-btn">
-          <Filter size={16} /> Sort By
+        <button 
+          className={`sort-btn ${sortByUrgency ? 'active' : ''}`}
+          onClick={() => setSortByUrgency(!sortByUrgency)}
+        >
+          <Filter size={16} /> {sortByUrgency ? 'Sorted by Urgency' : 'Sort By'}
         </button>
       </div>
 
       <div className="deadlines-grid">
-        {deadlineExists && filteredDeadlines.map((deadline) => (
+        {deadlineExists && displayedDeadlines.map((deadline) => (
           <div className="deadline-card" key={deadline.id}>
             <div className="card-top">
               <span

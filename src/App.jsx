@@ -19,6 +19,8 @@ import Auth from "./pages/Auth";
 import UserDetails from "./pages/UserDetails";
 import Calendar from "./pages/Calendar";
 import Deadlines from "./pages/Deadlines";
+import HelpBot from "./components/HelpBot";
+
 
 function App() {
   const [theme, setTheme] = useState("dark");
@@ -28,15 +30,16 @@ function App() {
   const [user, setUser] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const location = useLocation();
+  const [deadlines, setDeadlines] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        
+
         // Fast optimization: Unblock loading screen instantly!
         setLoading(false);
-        
+
         // Fast optimization: Check local storage cache
         const isCompletedCache = localStorage.getItem(`syncspace_profile_completed_${currentUser.uid}`) === "true";
         if (isCompletedCache) {
@@ -45,7 +48,7 @@ function App() {
           // If not in cache, default to app to avoid delay. The background fetch will redirect if needed.
           setCurrentScreen("app");
         }
-        
+
         try {
           const docSnap = await getDoc(doc(db, "users", currentUser.uid));
           if (docSnap.exists() && docSnap.data()?.firstName) {
@@ -67,7 +70,7 @@ function App() {
           }
         }
       }
-      else{
+      else {
         setUser(null);
         setProfileData(null);
         setCurrentScreen("intro");
@@ -112,7 +115,7 @@ function App() {
     );
   }
 
-  // 👉 SHOW INTRO OR AUTH FIRST
+  //SHOW INTRO OR AUTH FIRST
   if (currentScreen === "intro") {
     return <Intro onNavigate={(mode) => {
       setAuthMode(mode);
@@ -139,21 +142,21 @@ function App() {
     const prefilledLastName = currentUser?.displayName ? currentUser.displayName.split(" ").slice(1).join(" ") : "";
     const prefilledEmail = currentUser?.email || "";
 
-    return <UserDetails 
+    return <UserDetails
       onComplete={(updatedData) => {
         if (updatedData && auth.currentUser) {
           localStorage.setItem(`syncspace_profile_completed_${auth.currentUser.uid}`, "true");
         }
         setProfileData(updatedData);
         setCurrentScreen("app");
-      }} 
+      }}
       first_name={prefilledFirstName}
       last_name={prefilledLastName}
       mail={prefilledEmail}
     />;
   }
 
-  // 👉 THEN SHOW MAIN APP
+  // THEN SHOW MAIN APP
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar theme={theme} />
@@ -174,6 +177,9 @@ function App() {
           />
         </Routes>
       </div>
+
+      {/*  RENDER FLOATING AI ASSISTANT GLOBALLY */}
+      <HelpBot />
     </div>
   );
 }
