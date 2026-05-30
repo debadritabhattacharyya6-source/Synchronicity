@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle } from 'lucide-react';
 import './Auth.css';
 import { auth, db } from "/src/assets/firebase"
 import { doc, runTransaction, updateDoc } from "firebase/firestore";
