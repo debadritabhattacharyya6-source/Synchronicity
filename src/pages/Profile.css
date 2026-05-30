@@ -220,20 +220,6 @@
   transform: translateY(-2px);
 }
 
-
-/* Content Section */
-.profile-content {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 24px;
-}
-
-@media (max-width: 768px) {
-  .profile-content {
-    grid-template-columns: 1fr;
-  }
-}
-
 .info-card,
 .recent-activity-card {
   background: rgba(255, 255, 255, 0.03);
@@ -241,6 +227,10 @@
   border-radius: 20px;
   padding: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.recent-activity-card{
+  flex-grow: 1;
 }
 
 .info-card h2,
@@ -274,6 +264,7 @@
 /* Timeline */
 .activity-timeline {
   display: flex;
+  flex-grow: 1;
   flex-direction: column;
   gap: 20px;
   position: relative;
@@ -281,6 +272,7 @@
 
 .activity-timeline::before {
   content: '';
+  flex-grow: 1;
   position: absolute;
   left: 5px;
   top: 8px;
