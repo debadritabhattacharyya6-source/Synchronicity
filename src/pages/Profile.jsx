@@ -112,27 +112,9 @@ export default function Profile({ profileData, setProfileData }) {
           <div className="profile-details">
             <div className="profile-name-role">
               <h1>{userData.firstName} {userData.middleName} {userData.lastName}</h1>
-              <p className="role-badge">Student</p>
+             <span>Student at {userData.university}</span>
             </div>
-            <p className="profile-bio">
-              Student passionate about building beautiful and interactive web experiences.
-              Always eager to learn new technologies and improve my craft.
-            </p>
-
-            <div className="profile-stats">
-              <div className="stat-item">
-                <span className="stat-value">10</span>
-                <span className="stat-label">Projects</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">20</span>
-                <span className="stat-label">Tasks Done</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">4.9</span>
-                <span className="stat-label">Rating</span>
-              </div>
-            </div>
+           
           </div>
 
           <div className="profile-actions">
@@ -152,7 +134,6 @@ export default function Profile({ profileData, setProfileData }) {
               university_name={userData.university}
               mail={userData.email}
               ph={userData.phone} />}
-            <button className="btn-secondary">Share</button>
             <button className="btn-logout" onClick={confirmLogout}>Logout</button>
             <Modal
               modalVisible={showModal}
@@ -171,20 +152,16 @@ export default function Profile({ profileData, setProfileData }) {
           <h2>About Me</h2>
           <div className="info-list">
             <div className="info-row">
-              <Briefcase className="info-icon" size={18} />
-              <span>Student at {userData.university}</span>
-            </div>
-            <div className="info-row">
-              <MapPin className="info-icon" size={18} />
-              <span>Kolkata, West Bengal</span>
+              <Phone className="info-icon" size={18} />
+              <span>+91 {userData.phone}</span>
             </div>
             <div className="info-row">
               <Mail className="info-icon" size={18} />
               <span>{userData.email}</span>
             </div>
-            <div className="info-row">
-              <Phone className="info-icon" size={18} />
-              <span>+91 {userData.phone}</span>
+             <div className="info-row">
+              <Briefcase className="info-icon" size={18} />
+              <span>Student at {userData.university}</span>
             </div>
           </div>
         </div>

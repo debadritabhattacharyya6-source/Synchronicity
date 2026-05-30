@@ -1,0 +1,146 @@
+.notification-wrapper {
+  position: relative;
+}
+
+.icon-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--shadow);
+}
+
+.dot {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  min-width: 18px;
+  height: 18px;
+
+  border-radius: 999px;
+
+  background: #ff4d4f;
+  color: white;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+
+  width: 340px;
+
+  background: #111827;
+
+  border-radius: 18px;
+
+  border: 1px solid #243441;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+
+  overflow: hidden;
+
+  z-index: 9999;
+}
+
+.notification-header {
+  padding: 16px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-bottom: 1px solid #243441;
+}
+
+.notification-header h3 {
+  color: white;
+  margin: 0;
+}
+
+.notification-header span {
+  color: #52b788;
+  font-size: 12px;
+}
+
+.notification-list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.notification-card {
+  display: flex;
+  gap: 12px;
+
+  padding: 15px;
+
+  border-bottom: 1px solid #243441;
+
+  transition: 0.2s;
+}
+
+.notification-card:hover {
+  background: rgba(82, 183, 136, 0.08);
+}
+
+.notification-icon {
+  color: #ffb703;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.notification-top h4 {
+  color: white;
+  margin: 0;
+  font-size: 14px;
+}
+
+.notification-top span {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.notification-content p {
+  margin-top: 6px;
+  color: #d1d5db;
+  font-size: 13px;
+}
+
+.notification-footer {
+  padding: 14px;
+
+  text-align: center;
+
+  color: #52b788;
+
+  border-top: 1px solid #243441;
+
+  cursor: pointer;
+}
+
+.notification-footer:hover {
+  background: rgba(82, 183, 136, 0.08);
+}
+
+.notification-empty {
+  padding: 25px;
+
+  text-align: center;
+
+  color: #9ca3af;
+}
