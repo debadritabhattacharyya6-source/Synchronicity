@@ -11,6 +11,7 @@ export default function NewDeadline({ onCancel, onNext }) {
     const [deadlineType, setDeadlineType] = useState("");
     const [deadlineDate, setDeadlineDate] = useState(new Date().toLocaleDateString('en-CA'));
     const [deadlineTime, setDeadlineTime] = useState('');
+    const [checkpoints, setCheckpoints] = useState([{ id: `${Date.now()}`, label: "Complete", completed: false }]);
 
     const getUrgency = () => {
         const today = new Date();
@@ -42,7 +43,8 @@ export default function NewDeadline({ onCancel, onNext }) {
                 dueDate: deadlineDate,
                 time: deadlineTime,
                 urgency: getUrgency(),
-                progress: 0
+                progress: 0,
+                checkpoints: checkpoints
             }
             onNext(updatedItem);
         } catch (err) {
