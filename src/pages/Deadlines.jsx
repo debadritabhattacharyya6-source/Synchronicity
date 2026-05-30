@@ -119,7 +119,12 @@ export default function Deadlines({ theme }) {
         <div className="header-actions">
           <div className="search-bar">
             <Search size={18} className="search-icon" />
-            <input type="text" placeholder="Search deadlines..." />
+            <input
+              type="text"
+              placeholder="Search deadlines..."
+              
+            />
+
           </div>
           <button className="add-deadline-btn" onClick={enterNewDeadline}>+ New Deadline</button>
           {newDeadline && <NewDeadline onCancel={() => setNewDeadline(false)} onNext={transition} />}

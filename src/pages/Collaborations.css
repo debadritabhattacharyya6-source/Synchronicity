@@ -1521,3 +1521,64 @@
     transform: translateY(0);
   }
 }
+.group-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.delete-group-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+  color: var(--frosted-mint);
+
+  transition: all 0.2s ease;
+}
+
+.delete-group-btn:hover {
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+.delete-group-btn svg {
+  stroke-width: 2;
+}
+.task-move-btn {
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+
+  background: var(--bg-card);
+  color: var(--frosted-mint);
+  opacity: 0.7;
+  transition: .2s;
+}
+
+.task-move-btn:hover {
+  transform: translateY(-2px);
+}
+.completion-modal {
+  text-align: center;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  opacity: 0.9;
+}
