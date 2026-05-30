@@ -20,8 +20,8 @@ import "./Analytics.css";
 
 const COLORS = [
   "#52b788",
-  "#ffb703",
-  "#4361ee",
+  "#4a7e64",
+  "#52b78840",
 ];
 
 export default function Analytics() {
