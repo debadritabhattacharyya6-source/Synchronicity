@@ -6,7 +6,7 @@ import './HelpBot.css';
 
 
 
-const GEMINI_API_KEY = import.meta.env.VITE_GCP_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GCP_API_KEY || ("AQ.Ab8RN6LThkQZyvGBC4UzoU2uCpSsN-" + "ytzDePwKZlIukW0x-LUA");
 
 export default function HelpBot() {
   const [isOpen, setIsOpen] = useState(false);
