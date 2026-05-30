@@ -114,7 +114,56 @@ export default function Dashboard({ profileData }) {
       } catch (err) {
         console.error(err);
       }
-    }
+    };
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = async () => {
+      try {
+        const userDoc = doc(db, "users", auth.currentUser.uid);
+        await runTransaction(db, async (transaction) => {
+          const docRef = await transaction.get(userDoc);
+          if (!docRef.exists()) throw "User does not exist";
+          const existingDeadlines = docRef.data().deadlines || [];
+          const todayMidnight = new Date();
+          todayMidnight.setHours(0, 0, 0, 0);
+          const newDeadlineArray = existingDeadlines.map((deadline) => {
+            const [year, month, day] = deadline.dueDate.split('-').map(Number);
+
+            const deadlineMidnight = new Date(year, month - 1, day);
+            deadlineMidnight.setHours(0, 0, 0, 0);
+
+            const diffTime = deadlineMidnight.getTime() - todayMidnight.getTime();
+            const daysLeft = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (daysLeft >= 14) {
+              return {
+                ...deadline,
+                urgency: "low"
+              }
+            }
+            else if(daysLeft >= 7 && daysLeft< 14){
+              return {
+                ...deadline,
+                urgency: "medium"
+              }
+            }
+            else{
+              return {
+                ...deadline,
+                urgency: "high"
+              }
+            }
+            return true;
+          });
+          transaction.update(userDoc, { deadlines: newDeadlineArray });
+        });
+        setIsSubmitted(true);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    return () => unsubscribe();
   }, []);
 
   const getRelativeTimeText = (dateString) => {
