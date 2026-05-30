@@ -59,34 +59,43 @@ export default function CollaborationPage() {
       setShowCompletionModal(true);
     }
   }, [workspaceTasks, activeWorkspace, groups]);
+  const fetchGroups = async () => {
+    try {
+      const user = auth.currentUser;
+
+      if (!user) return;
+
+      const q = query(
+        collection(db, "groups"),
+        where("memberIds", "array-contains", user.uid),
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      const loadedGroups = [];
+
+      querySnapshot.forEach((doc) => {
+        loadedGroups.push(doc.data());
+      });
+
+      setGroups(loadedGroups);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const user = auth.currentUser;
-
-        if (!user) return;
-
-        const q = query(
-          collection(db, "groups"),
-          where("memberIds", "array-contains", user.uid),
-        );
-
-        const querySnapshot = await getDocs(q);
-
-        const loadedGroups = [];
-
-        querySnapshot.forEach((doc) => {
-          loadedGroups.push(doc.data());
-        });
-
-        setGroups(loadedGroups);
-      } catch (error) {
-        console.log(error);
-        alert(error);
-      }
-    };
-
     fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      fetchGroups();
+    };
+    window.addEventListener('collaborationsUpdated', handleUpdate);
+    return () => {
+      window.removeEventListener('collaborationsUpdated', handleUpdate);
+    };
   }, []);
   const tasks = workspaceTasks[activeWorkspace] || {
     todo: [],
@@ -534,12 +543,12 @@ export default function CollaborationPage() {
                   </button>
                 </div>
 
-                <p>
+                <div>
                   <p>
                     {group.memberIds?.length || 0}/{group.maxMembers} Members •{" "}
                     {group.deadline}
                   </p>
-                </p>
+                </div>
 
                 <div className="progress-bar">
                   <div
