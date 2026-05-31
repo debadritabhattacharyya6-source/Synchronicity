@@ -774,34 +774,6 @@ export default function CollaborationPage() {
           </div>
         </section>
       )}
-      ;
-      <section className="section">
-        <div className="section-header">
-          <h2>Upcoming Study Sessions</h2>
-        </div>
-
-        <div className="session-grid">
-          <div className="session-card">
-            <h3>Operating Systems Revision</h3>
-
-            <p>Today • 7:30 PM</p>
-
-            <span>4/6 Members Joined</span>
-
-            <button>Join Session</button>
-          </div>
-
-          <div className="session-card">
-            <h3>DBMS Mock Viva</h3>
-
-            <p>Tomorrow • 5:00 PM</p>
-
-            <span>3/5 Members Joined</span>
-
-            <button>Join Session</button>
-          </div>
-        </div>
-      </section>
       {/* CREATE TEAM MODAL */}
       {showModal && (
         <div className="modal-overlay">
@@ -892,15 +864,6 @@ export default function CollaborationPage() {
             >
               Copy Invite Code
             </button>
-
-            <div className="share-link">
-              <span>Share Link</span>
-
-              <p>
-                syncsphere.app/join/
-                {activeGroup?.code}
-              </p>
-            </div>
           </div>
         </div>
       )}
