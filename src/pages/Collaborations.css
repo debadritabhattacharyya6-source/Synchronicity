@@ -2,14 +2,14 @@
   min-height:100vh;
   padding:30px;
 
-  background: var(--bg-surface);
+  background: var(--bg-card);
   color: var(--text-primary);
 
   position: relative;
   overflow-x: hidden;
 }
 
-/* subtle glow background */
+/* subtle glow background*/ 
 
 .collab-page::before{
   content:"";
@@ -28,7 +28,7 @@
       rgba(116,198,157,0.12),
       transparent 30%
     );*/
-    background: var(--bg-surface);
+    
 
   pointer-events:none;
   z-index:0;
@@ -1586,4 +1586,8 @@
 
 .delete-btn:hover {
   opacity: 0.9;
+} 
+.topbar h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
 }

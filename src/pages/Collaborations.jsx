@@ -72,7 +72,9 @@ export default function CollaborationPage() {
 
       const members = [];
 
-      const validUids = activeGroup.memberIds.filter(uid => uid && typeof uid === "string" && uid.trim() !== "");
+      const validUids = activeGroup.memberIds.filter(
+        (uid) => uid && typeof uid === "string" && uid.trim() !== "",
+      );
 
       for (const uid of validUids) {
         const userDoc = await getDoc(doc(db, "users", uid));
@@ -115,7 +117,6 @@ export default function CollaborationPage() {
       setShowCompletionModal(true);
     }
   }, [workspaceTasks, activeWorkspace, groups]);
-
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -296,11 +297,11 @@ export default function CollaborationPage() {
     groups.length === 0
       ? 0
       : Math.round(
-        groups.reduce(
-          (total, group) => total + calculateProgress(group.code),
-          0,
-        ) / groups.length,
-      );
+          groups.reduce(
+            (total, group) => total + calculateProgress(group.code),
+            0,
+          ) / groups.length,
+        );
 
   const getProgressColor = (progress) => {
     if (progress >= 70) {
@@ -565,8 +566,9 @@ export default function CollaborationPage() {
 
             return (
               <div
-                className={`group-card ${activeWorkspace === group.code ? "active-group" : ""
-                  }`}
+                className={`group-card ${
+                  activeWorkspace === group.code ? "active-group" : ""
+                }`}
                 key={index}
                 onClick={() => setActiveWorkspace(group.code)}
               >
@@ -774,35 +776,7 @@ export default function CollaborationPage() {
           </div>
         </section>
       )}
-      ;
-      <section className="section">
-        <div className="section-header">
-          <h2>Upcoming Study Sessions</h2>
-        </div>
-
-        <div className="session-grid">
-          <div className="session-card">
-            <h3>Operating Systems Revision</h3>
-
-            <p>Today • 7:30 PM</p>
-
-            <span>4/6 Members Joined</span>
-
-            <button>Join Session</button>
-          </div>
-
-          <div className="session-card">
-            <h3>DBMS Mock Viva</h3>
-
-            <p>Tomorrow • 5:00 PM</p>
-
-            <span>3/5 Members Joined</span>
-
-            <button>Join Session</button>
-          </div>
-        </div>
-      </section>
-      {/* CREATE TEAM MODAL */}
+      ;{/* CREATE TEAM MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="team-modal">
@@ -957,16 +931,19 @@ export default function CollaborationPage() {
                   setNewTask({
                     ...newTask,
                     assignedUid: "",
-                    assigned: ""
+                    assigned: "",
                   });
                   return;
                 }
-                const member = activeGroupMembers.find((m) => m.uid === selectedUid);
+                const member = activeGroupMembers.find(
+                  (m) => m.uid === selectedUid,
+                );
                 if (member) {
                   setNewTask({
                     ...newTask,
                     assignedUid: member.uid,
-                    assigned: `${member.firstName || ""} ${member.lastName || ""}`.trim()
+                    assigned:
+                      `${member.firstName || ""} ${member.lastName || ""}`.trim(),
                   });
                 }
               }}
@@ -1028,42 +1005,39 @@ export default function CollaborationPage() {
             </div>
           </div>
         </div>
-      )
-      }
-      {
-        showCompletionModal && completedGroup && (
-          <div className="modal-overlay">
-            <div className="team-modal completion-modal">
-              <h2>🎉 Study Group Completed</h2>
+      )}
+      {showCompletionModal && completedGroup && (
+        <div className="modal-overlay">
+          <div className="team-modal completion-modal">
+            <h2>🎉 Study Group Completed</h2>
 
-              <p>
-                All tasks for
-                <strong> {completedGroup.title}</strong> have been completed.
-              </p>
+            <p>
+              All tasks for
+              <strong> {completedGroup.title}</strong> have been completed.
+            </p>
 
-              <div className="modal-buttons">
-                <button
-                  className="cancel-btn"
-                  onClick={() => setShowCompletionModal(false)}
-                >
-                  Keep Group
-                </button>
+            <div className="modal-buttons">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowCompletionModal(false)}
+              >
+                Keep Group
+              </button>
 
-                <button
-                  className="delete-btn"
-                  onClick={() => {
-                    handleDeleteGroup(completedGroup.code);
+              <button
+                className="delete-btn"
+                onClick={() => {
+                  handleDeleteGroup(completedGroup.code);
 
-                    setShowCompletionModal(false);
-                  }}
-                >
-                  Delete Group
-                </button>
-              </div>
+                  setShowCompletionModal(false);
+                }}
+              >
+                Delete Group
+              </button>
             </div>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 }

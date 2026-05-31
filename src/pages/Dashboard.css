@@ -284,3 +284,36 @@
 .legend-dot:hover {
   transform: none;
 }
+.dashboard-header h1{
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+
+  background: linear-gradient(
+    90deg,
+    var(--text-secondary),
+    var(--text-primary)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  text-shadow: 0 0 20px rgba(82, 183, 136, 0.25);
+
+  margin-bottom: 32px;
+   font-family: 'Poppins', sans-serif;
+}
+.dashboard-header h1::after{
+    content: "";
+  display: block;
+  width: 100px;
+  height: 3px;
+  margin-top: 10px;
+
+  background: linear-gradient(
+    90deg,
+    #52b788,
+    transparent
+  );
+
+  border-radius: 10px;
+}
