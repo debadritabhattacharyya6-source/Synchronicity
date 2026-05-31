@@ -197,9 +197,12 @@ export default function HelpBot() {
       // Generate random 4-digit code
       const randomCode = `SYNC-${Math.floor(1000 + Math.random() * 9000)}`;
 
+      const parsedMembers = Number(membersCount);
+      const maxMembers = isNaN(parsedMembers) || parsedMembers <= 1 ? 5 : parsedMembers;
+
       const newWorkspaceItem = {
         title: title || "New Team",
-        maxMembers: Number(membersCount) || 5,
+        maxMembers: maxMembers,
         deadline: deadlineString || "No Deadline",
         progress: 0,
         code: randomCode,
@@ -471,7 +474,7 @@ You MUST respond strictly in valid JSON format matching this schema:
 
     // Only required for CREATE_WORKSPACE:
     "workspace_title": "Clean readable name for the new team / workspace",
-    "members_count": "Number of members in the team - default to 1 if not mentioned",
+    "members_count": "Number of members in the team - default to 5 if not mentioned",
     "workspace_deadline": "Due date or project deadline details (e.g., 'June 15' or 'No Deadline')"
   }
 }
@@ -479,7 +482,7 @@ You MUST respond strictly in valid JSON format matching this schema:
 Important: Ensure "response_text" is natural, concise, and friendly as it will be read aloud. Keep academic explanations clear and engaging.
 `;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -499,7 +502,16 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini API Error: Status ${response.status}`);
+        let errorMessage = `Gemini API Error: Status ${response.status}`;
+        try {
+          const errData = await response.json();
+          if (errData?.error?.message) {
+            errorMessage = errData.error.message;
+          }
+        } catch (_) {}
+        const error = new Error(errorMessage);
+        error.status = response.status;
+        throw error;
       }
 
       const rawData = await response.json();
@@ -563,12 +575,25 @@ Important: Ensure "response_text" is natural, concise, and friendly as it will b
 
     } catch (e) {
       console.error(e);
+      let errorText = "I experienced an error analyzing that. Please ensure your Gemini Key is correct and try again.";
+      let speechText = "Sorry, I could not complete your request due to an error.";
+
+      if (e.status === 429 || e.message?.toLowerCase().includes("quota") || e.message?.toLowerCase().includes("rate limit") || e.message?.toLowerCase().includes("limit exceeded")) {
+        errorText = "You have exceeded the Gemini API daily/rate limit quota. Please wait a bit before trying again, or click the gear icon ⚙️ at the top right to configure your own Gemini API Key.";
+        speechText = "Daily API limit exceeded. Please try again later.";
+      } else if (e.status === 403 || e.message?.toLowerCase().includes("key not valid") || e.message?.toLowerCase().includes("invalid")) {
+        errorText = "Your Gemini API Key appears to be invalid or incorrect. Please click the gear icon ⚙️ at the top right to verify or update your key.";
+        speechText = "Invalid API key. Please check your settings.";
+      } else if (e.message) {
+        errorText = `I experienced an error: ${e.message}. Please check your configuration and try again.`;
+      }
+
       setMessages(prev => [...prev, {
         id: Date.now(),
-        text: "I experienced an error analyzing that. Please ensure your Gemini Key is correct and try again.",
+        text: errorText,
         sender: 'bot'
       }]);
-      speakText("Sorry, I could not complete your request due to an error.");
+      speakText(speechText);
     } finally {
       setIsThinking(false);
     }

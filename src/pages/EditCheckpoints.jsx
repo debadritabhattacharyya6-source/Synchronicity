@@ -19,7 +19,7 @@ export default function Checkpoints({ data, onCancel }) {
                 if (!docRef.exists()) throw "User does not exist";
                 const existingDeadlines = docRef.data().deadlines || [];
                 const completedCheckpoints = checkpoints.filter((checkpoint) => checkpoint.completed);
-                const newProgress = (completedCheckpoints.length/checkpoints.length)*100;
+                const newProgress = (completedCheckpoints.length / checkpoints.length) * 100;
                 const updatedItem = {
                     ...data,
                     progress: newProgress,
@@ -84,13 +84,15 @@ export default function Checkpoints({ data, onCancel }) {
                     <ul className='auth-bullets'>
                         {checkpoints.map((checkpoint) => (
                             <li key={checkpoint.id} style={{ fontSize: "20px", fontFamily: "Cinzel, serif", color: "rgba(255,255,255,0.7)", display: "flex", justifyContent: "space-between" }}>
-                                <div style={{display: "flex", gap: "15px", alignItems:"center", justifyContent: "center"}}>
+                                <div style={{ display: "flex", gap: "15px", alignItems: "center", justifyContent: "center" }}>
                                     <span className='diamond-bullet'></span>
                                     <span>
                                         {checkpoint.label}
                                     </span>
                                 </div>
-                                <Trash className='delete-btn' onClick={() => handleDelete(checkpoint.id)}/>
+                                {index !== checkpoints.length - 1 &&
+                                    <Trash className='delete-btn' onClick={() => handleDelete(checkpoint.id)} />
+                                }
                             </li>
                         ))}
                     </ul>

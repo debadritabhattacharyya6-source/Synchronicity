@@ -776,7 +776,9 @@ export default function CollaborationPage() {
           </div>
         </section>
       )}
-      ;{/* CREATE TEAM MODAL */}
+
+      {/* CREATE TEAM MODAL */}
+
       {showModal && (
         <div className="modal-overlay">
           <div className="team-modal">
@@ -866,15 +868,6 @@ export default function CollaborationPage() {
             >
               Copy Invite Code
             </button>
-
-            <div className="share-link">
-              <span>Share Link</span>
-
-              <p>
-                syncsphere.app/join/
-                {activeGroup?.code}
-              </p>
-            </div>
           </div>
         </div>
       )}
