@@ -438,10 +438,11 @@ export default function CollaborationPage() {
       alert(error.message);
     }
   };
+
   const moveTask = async (task, fromColumn, toColumn) => {
     const currentUid = auth.currentUser.uid;
 
-    if (toColumn === "completed" && task.assignedUid !== currentUid) {
+    if (toColumn !== "completed" && task.assignedUid !== currentUid) {
       alert("Only the assigned member can complete this task.");
       return;
     }
