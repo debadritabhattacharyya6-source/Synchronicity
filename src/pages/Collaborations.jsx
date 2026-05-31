@@ -36,54 +36,6 @@ export default function CollaborationPage() {
     deadline: "",
   });
   const [activeGroupMembers, setActiveGroupMembers] = useState([]);
-  useEffect(() => {
-    const loadMembers = async () => {
-      if (!activeGroup) return;
-
-      const members = [];
-
-      for (const uid of activeGroup.memberIds) {
-        const userDoc = await getDoc(doc(db, "users", uid));
-
-        if (userDoc.exists()) {
-          members.push({
-            uid,
-            ...userDoc.data(),
-          });
-        }
-      }
-
-      setActiveGroupMembers(members);
-    };
-
-    loadMembers();
-  }, [activeGroup]);
-
-  useEffect(() => {
-    if (!activeWorkspace) return;
-
-    const workspace = workspaceTasks[activeWorkspace];
-
-    if (!workspace) return;
-
-    const totalTasks =
-      (workspace.todo?.length || 0) +
-      (workspace.inprogress?.length || 0) +
-      (workspace.review?.length || 0) +
-      (workspace.completed?.length || 0);
-
-    if (totalTasks === 0) return;
-
-    const allCompleted = workspace.completed?.length === totalTasks;
-
-    if (allCompleted) {
-      const group = groups.find((g) => g.code === activeWorkspace);
-
-      setCompletedGroup(group);
-
-      setShowCompletionModal(true);
-    }
-  }, [workspaceTasks, activeWorkspace, groups]);
   const fetchGroups = async () => {
     try {
       const user = auth.currentUser;
@@ -114,6 +66,58 @@ export default function CollaborationPage() {
   }, []);
 
   useEffect(() => {
+    const activeGroup = groups.find((group) => group.code === activeWorkspace);
+    const loadMembers = async () => {
+      if (!activeGroup) return;
+
+      const members = [];
+
+      const validUids = activeGroup.memberIds.filter(uid => uid && typeof uid === "string" && uid.trim() !== "");
+
+      for (const uid of validUids) {
+        const userDoc = await getDoc(doc(db, "users", uid));
+
+        if (userDoc.exists()) {
+          members.push({
+            uid,
+            ...userDoc.data(),
+          });
+        }
+      }
+
+      setActiveGroupMembers(members);
+    };
+    loadMembers();
+  }, [activeWorkspace, groups]);
+
+  useEffect(() => {
+    if (!activeWorkspace) return;
+
+    const workspace = workspaceTasks[activeWorkspace];
+
+    if (!workspace) return;
+
+    const totalTasks =
+      (workspace.todo?.length || 0) +
+      (workspace.inprogress?.length || 0) +
+      (workspace.review?.length || 0) +
+      (workspace.completed?.length || 0);
+
+    if (totalTasks === 0) return;
+
+    const allCompleted = workspace.completed?.length === totalTasks;
+
+    if (allCompleted) {
+      const group = groups.find((g) => g.code === activeWorkspace);
+
+      setCompletedGroup(group);
+
+      setShowCompletionModal(true);
+    }
+  }, [workspaceTasks, activeWorkspace, groups]);
+
+
+  useEffect(() => {
     const handleUpdate = () => {
       fetchGroups();
     };
@@ -122,6 +126,7 @@ export default function CollaborationPage() {
       window.removeEventListener("collaborationsUpdated", handleUpdate);
     };
   }, []);
+
   const tasks = workspaceTasks[activeWorkspace] || {
     todo: [],
     inprogress: [],
@@ -291,11 +296,11 @@ export default function CollaborationPage() {
     groups.length === 0
       ? 0
       : Math.round(
-          groups.reduce(
-            (total, group) => total + calculateProgress(group.code),
-            0,
-          ) / groups.length,
-        );
+        groups.reduce(
+          (total, group) => total + calculateProgress(group.code),
+          0,
+        ) / groups.length,
+      );
 
   const getProgressColor = (progress) => {
     if (progress >= 70) {
@@ -559,9 +564,8 @@ export default function CollaborationPage() {
 
             return (
               <div
-                className={`group-card ${
-                  activeWorkspace === group.code ? "active-group" : ""
-                }`}
+                className={`group-card ${activeWorkspace === group.code ? "active-group" : ""
+                  }`}
                 key={index}
                 onClick={() => setActiveWorkspace(group.code)}
               >
@@ -941,27 +945,37 @@ export default function CollaborationPage() {
                   title: e.target.value,
                 })
               }
+              required
             />
 
             <select
               value={newTask.assignedUid || ""}
               onChange={(e) => {
-                const member = activeGroupMembers.find(
-                  (m) => m.uid === e.target.value,
-                );
-
-                setNewTask({
-                  ...newTask,
-                  assignedUid: member.uid,
-                  assigned: member.name,
-                });
+                const selectedUid = e.target.value;
+                if (!selectedUid) {
+                  setNewTask({
+                    ...newTask,
+                    assignedUid: "",
+                    assigned: ""
+                  });
+                  return;
+                }
+                const member = activeGroupMembers.find((m) => m.uid === selectedUid);
+                if (member) {
+                  setNewTask({
+                    ...newTask,
+                    assignedUid: member.uid,
+                    assigned: `${member.firstName || ""} ${member.lastName || ""}`.trim()
+                  });
+                }
               }}
+              required
             >
               <option value="">Assign Member</option>
 
               {activeGroupMembers.map((member) => (
                 <option key={member.uid} value={member.uid}>
-                  {member.name}
+                  {member.firstName} {member.lastName}
                 </option>
               ))}
             </select>
@@ -975,6 +989,7 @@ export default function CollaborationPage() {
                   due: e.target.value,
                 })
               }
+              required
             />
 
             <select
@@ -985,6 +1000,7 @@ export default function CollaborationPage() {
                   priority: e.target.value,
                 })
               }
+              required
             >
               <option value="">Select Priority</option>
 
@@ -1011,39 +1027,42 @@ export default function CollaborationPage() {
             </div>
           </div>
         </div>
-      )}
-      {showCompletionModal && completedGroup && (
-        <div className="modal-overlay">
-          <div className="team-modal completion-modal">
-            <h2>🎉 Study Group Completed</h2>
+      )
+      }
+      {
+        showCompletionModal && completedGroup && (
+          <div className="modal-overlay">
+            <div className="team-modal completion-modal">
+              <h2>🎉 Study Group Completed</h2>
 
-            <p>
-              All tasks for
-              <strong> {completedGroup.title}</strong> have been completed.
-            </p>
+              <p>
+                All tasks for
+                <strong> {completedGroup.title}</strong> have been completed.
+              </p>
 
-            <div className="modal-buttons">
-              <button
-                className="cancel-btn"
-                onClick={() => setShowCompletionModal(false)}
-              >
-                Keep Group
-              </button>
+              <div className="modal-buttons">
+                <button
+                  className="cancel-btn"
+                  onClick={() => setShowCompletionModal(false)}
+                >
+                  Keep Group
+                </button>
 
-              <button
-                className="delete-btn"
-                onClick={() => {
-                  handleDeleteGroup(completedGroup.code);
+                <button
+                  className="delete-btn"
+                  onClick={() => {
+                    handleDeleteGroup(completedGroup.code);
 
-                  setShowCompletionModal(false);
-                }}
-              >
-                Delete Group
-              </button>
+                    setShowCompletionModal(false);
+                  }}
+                >
+                  Delete Group
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

@@ -1484,6 +1484,11 @@
 
 /* EMPTY TASK STATE */
 
+.empty-state{
+  display: flex;
+  gap : 14px;
+}
+
 .task-column-empty{
   margin-top: 1rem;
 
