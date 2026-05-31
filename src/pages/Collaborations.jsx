@@ -29,12 +29,12 @@ export default function CollaborationPage() {
 
   const [completedGroup, setCompletedGroup] = useState(null);
 
+  const activeGroup = groups.find((group) => group.code === activeWorkspace);
   const [newTeam, setNewTeam] = useState({
     title: "",
     members: "",
     deadline: "",
   });
-  const activeGroup = groups.find((group) => group.code === activeWorkspace);
   const [activeGroupMembers, setActiveGroupMembers] = useState([]);
   useEffect(() => {
     const loadMembers = async () => {
@@ -76,7 +76,7 @@ export default function CollaborationPage() {
 
     const allCompleted = workspace.completed?.length === totalTasks;
 
-    if (allCompleted && !showCompletionModal) {
+    if (allCompleted) {
       const group = groups.find((g) => g.code === activeWorkspace);
 
       setCompletedGroup(group);
@@ -488,7 +488,6 @@ export default function CollaborationPage() {
           <button>Create Workspace</button>
         </div>
       </div>
-
       <section className="hero">
         <div className="hero-left">
           <span className="badge">Realtime Collaboration</span>
@@ -549,7 +548,6 @@ export default function CollaborationPage() {
           </div>
         </div>
       </section>
-
       <section className="section">
         <div className="section-header">
           <h2>Active Study Groups</h2>
@@ -613,160 +611,165 @@ export default function CollaborationPage() {
           })}
         </div>
       </section>
-
       <div className="workspace-header">
         {groups.length === 0 ? (
           <div className="empty-state">
             <h2>No Workspaces Yet</h2>
-
             <p>Create or join a workspace to start collaborating.</p>
+          </div>
+        ) : !activeWorkspace ? (
+          <div className="empty-state">
+            <h2>Select a Workspace</h2>
+            <p>Choose a group from above to view tasks and collaboration.</p>
           </div>
         ) : (
           <>
             <div>
               <h2>{activeGroup?.title}</h2>
-
               <p>Active collaboration workspace</p>
             </div>
+
             <button onClick={() => setShowInviteModal(true)}>
               Invite Members
             </button>
           </>
         )}
       </div>
+      {activeWorkspace && (
+        <section className="section">
+          <div className="section-header">
+            <h2>Task Board</h2>
 
-      <section className="section">
-        <div className="section-header">
-          <h2>Task Board</h2>
-
-          {activeWorkspace && (
-            <button
-              className="add-task-btn"
-              onClick={() => setShowTaskModal(true)}
-            >
-              + Add Task
-            </button>
-          )}
-        </div>
-
-        <div className="task-board">
-          <div className="task-column">
-            <h3>To Do</h3>
-
-            {tasks.todo.map((task, i) => (
-              <div className="task-card" key={i}>
-                <div className="task-title">{task.title}</div>
-                <button
-                  className="task-move-btn"
-                  onClick={() => moveTask(task, "todo", "inprogress")}
-                >
-                  Start →
-                </button>
-
-                <div className="task-hover">
-                  <p>
-                    <strong>Assigned:</strong> {task.assigned}
-                  </p>
-
-                  <p>
-                    <strong>Due:</strong> {task.due}
-                  </p>
-
-                  <p>
-                    <strong>Priority:</strong> {task.priority}
-                  </p>
-                </div>
-              </div>
-            ))}
+            {activeWorkspace && (
+              <button
+                className="add-task-btn"
+                onClick={() => setShowTaskModal(true)}
+              >
+                + Add Task
+              </button>
+            )}
           </div>
 
-          {/* IN PROGRESS */}
+          <div className="task-board">
+            <div className="task-column">
+              <h3>To Do</h3>
 
-          <div className="task-column">
-            <h3>In Progress</h3>
+              {tasks.todo.map((task, i) => (
+                <div className="task-card" key={i}>
+                  <div className="task-title">{task.title}</div>
+                  <button
+                    className="task-move-btn"
+                    onClick={() => moveTask(task, "todo", "inprogress")}
+                  >
+                    Start →
+                  </button>
 
-            {tasks.inprogress.map((task, i) => (
-              <div className="task-card" key={i}>
-                <div className="task-title">{task.title}</div>
-                <button
-                  className="task-move-btn"
-                  onClick={() => moveTask(task, "inprogress", "review")}
-                >
-                  Send Review →
-                </button>
+                  <div className="task-hover">
+                    <p>
+                      <strong>Assigned:</strong> {task.assigned}
+                    </p>
 
-                <div className="task-hover">
-                  <p>
-                    <strong>Assigned:</strong> {task.assigned}
-                  </p>
+                    <p>
+                      <strong>Due:</strong> {task.due}
+                    </p>
 
-                  <p>
-                    <strong>Due:</strong> {task.due}
-                  </p>
-
-                  <p>
-                    <strong>Priority:</strong> {task.priority}
-                  </p>
+                    <p>
+                      <strong>Priority:</strong> {task.priority}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* REVIEW */}
+            {/* IN PROGRESS */}
 
-          <div className="task-column">
-            <h3>Review</h3>
+            <div className="task-column">
+              <h3>In Progress</h3>
 
-            {tasks.review.map((task, i) => (
-              <div className="task-card" key={i}>
-                <div className="task-title">{task.title}</div>
-                <button
-                  className="task-move-btn"
-                  onClick={() => moveTask(task, "review", "completed")}
-                >
-                  Complete →
-                </button>
+              {tasks.inprogress.map((task, i) => (
+                <div className="task-card" key={i}>
+                  <div className="task-title">{task.title}</div>
+                  <button
+                    className="task-move-btn"
+                    onClick={() => moveTask(task, "inprogress", "review")}
+                  >
+                    Send Review →
+                  </button>
 
-                <div className="task-hover">
-                  <p>
-                    <strong>Assigned:</strong> {task.assigned}
-                  </p>
+                  <div className="task-hover">
+                    <p>
+                      <strong>Assigned:</strong> {task.assigned}
+                    </p>
 
-                  <p>
-                    <strong>Due:</strong> {task.due}
-                  </p>
+                    <p>
+                      <strong>Due:</strong> {task.due}
+                    </p>
 
-                  <p>
-                    <strong>Priority:</strong> {task.priority}
-                  </p>
+                    <p>
+                      <strong>Priority:</strong> {task.priority}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* COMPLETED */}
+            {/* REVIEW */}
 
-          <div className="task-column">
-            <h3>Completed</h3>
+            <div className="task-column">
+              <h3>Review</h3>
 
-            {tasks.completed.map((task, i) => (
-              <div className="task-card completed" key={i}>
-                <div className="task-title">{task.title}</div>
+              {tasks.review.map((task, i) => (
+                <div className="task-card" key={i}>
+                  <div className="task-title">{task.title}</div>
+                  <button
+                    className="task-move-btn"
+                    onClick={() => moveTask(task, "review", "completed")}
+                  >
+                    Complete →
+                  </button>
 
-                <div className="task-hover">
-                  <p>
-                    <strong>Assigned:</strong> {task.assigned}
-                  </p>
+                  <div className="task-hover">
+                    <p>
+                      <strong>Assigned:</strong> {task.assigned}
+                    </p>
 
-                  <p>
-                    <strong>Status:</strong> Finished
-                  </p>
+                    <p>
+                      <strong>Due:</strong> {task.due}
+                    </p>
+
+                    <p>
+                      <strong>Priority:</strong> {task.priority}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* COMPLETED */}
+
+            <div className="task-column">
+              <h3>Completed</h3>
+
+              {tasks.completed.map((task, i) => (
+                <div className="task-card completed" key={i}>
+                  <div className="task-title">{task.title}</div>
+
+                  <div className="task-hover">
+                    <p>
+                      <strong>Assigned:</strong> {task.assigned}
+                    </p>
+
+                    <p>
+                      <strong>Status:</strong> Finished
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+      ;
       <section className="section">
         <div className="section-header">
           <h2>Upcoming Study Sessions</h2>
@@ -795,7 +798,6 @@ export default function CollaborationPage() {
         </div>
       </section>
       {/* CREATE TEAM MODAL */}
-
       {showModal && (
         <div className="modal-overlay">
           <div className="team-modal">
@@ -853,7 +855,6 @@ export default function CollaborationPage() {
         </div>
       )}
       {/* INVITE MODAL */}
-
       {showInviteModal && (
         <div className="invite-overlay">
           <div className="invite-modal">
@@ -898,7 +899,6 @@ export default function CollaborationPage() {
           </div>
         </div>
       )}
-
       {showJoinModal && (
         <div className="modal-overlay">
           <div className="team-modal">
@@ -926,7 +926,6 @@ export default function CollaborationPage() {
           </div>
         </div>
       )}
-
       {showTaskModal && (
         <div className="modal-overlay">
           <div className="team-modal">
@@ -951,18 +950,18 @@ export default function CollaborationPage() {
                   (m) => m.uid === e.target.value,
                 );
 
-                if (!member) return;
-
-                <option key={member.uid} value={member.uid}>
-                  {member.firstName} {member.lastName}
-                </option>;
+                setNewTask({
+                  ...newTask,
+                  assignedUid: member.uid,
+                  assigned: member.name,
+                });
               }}
             >
               <option value="">Assign Member</option>
 
               {activeGroupMembers.map((member) => (
                 <option key={member.uid} value={member.uid}>
-                  {member.firstName} {member.lastName}
+                  {member.name}
                 </option>
               ))}
             </select>
