@@ -34,6 +34,31 @@ export default function CollaborationPage() {
     members: "",
     deadline: "",
   });
+  const activeGroup = groups.find((group) => group.code === activeWorkspace);
+  const [activeGroupMembers, setActiveGroupMembers] = useState([]);
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (!activeGroup) return;
+
+      const members = [];
+
+      for (const uid of activeGroup.memberIds) {
+        const userDoc = await getDoc(doc(db, "users", uid));
+
+        if (userDoc.exists()) {
+          members.push({
+            uid,
+            ...userDoc.data(),
+          });
+        }
+      }
+
+      setActiveGroupMembers(members);
+    };
+
+    loadMembers();
+  }, [activeGroup]);
+
   useEffect(() => {
     if (!activeWorkspace) return;
 
@@ -51,7 +76,7 @@ export default function CollaborationPage() {
 
     const allCompleted = workspace.completed?.length === totalTasks;
 
-    if (allCompleted) {
+    if (allCompleted && !showCompletionModal) {
       const group = groups.find((g) => g.code === activeWorkspace);
 
       setCompletedGroup(group);
@@ -92,9 +117,9 @@ export default function CollaborationPage() {
     const handleUpdate = () => {
       fetchGroups();
     };
-    window.addEventListener('collaborationsUpdated', handleUpdate);
+    window.addEventListener("collaborationsUpdated", handleUpdate);
     return () => {
-      window.removeEventListener('collaborationsUpdated', handleUpdate);
+      window.removeEventListener("collaborationsUpdated", handleUpdate);
     };
   }, []);
   const tasks = workspaceTasks[activeWorkspace] || {
@@ -409,6 +434,12 @@ export default function CollaborationPage() {
     }
   };
   const moveTask = async (task, fromColumn, toColumn) => {
+    const currentUid = auth.currentUser.uid;
+
+    if (toColumn === "completed" && task.assignedUid !== currentUid) {
+      alert("Only the assigned member can complete this task.");
+      return;
+    }
     const workspace = workspaceTasks[activeWorkspace];
 
     if (!workspace) return;
@@ -442,7 +473,7 @@ export default function CollaborationPage() {
       alert(error.message);
     }
   };
-  const activeGroup = groups.find((group) => group.code === activeWorkspace);
+
   return (
     <div className="collab-page">
       <div className="topbar">
@@ -913,18 +944,28 @@ export default function CollaborationPage() {
               }
             />
 
-            <input
-              type="text"
-              placeholder="Assigned To"
-              value={newTask.assigned}
-              onChange={(e) =>
-                setNewTask({
-                  ...newTask,
-                  assigned: e.target.value,
-                })
-              }
-            />
+            <select
+              value={newTask.assignedUid || ""}
+              onChange={(e) => {
+                const member = activeGroupMembers.find(
+                  (m) => m.uid === e.target.value,
+                );
 
+                if (!member) return;
+
+                <option key={member.uid} value={member.uid}>
+                  {member.firstName} {member.lastName}
+                </option>;
+              }}
+            >
+              <option value="">Assign Member</option>
+
+              {activeGroupMembers.map((member) => (
+                <option key={member.uid} value={member.uid}>
+                  {member.firstName} {member.lastName}
+                </option>
+              ))}
+            </select>
             <input
               type="date"
               placeholder="Due Date"
