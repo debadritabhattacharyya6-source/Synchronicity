@@ -201,7 +201,7 @@ export default function CompleteCheckpoints({ onCancel, deadline: initialDeadlin
                         <legend className='auth-title' align="center" style={{ marginBottom: "0px" }}>Checkpoints</legend>
                         <SquarePen className='complete-btn' style={{ width: "100%", height: "100%", borderRadius: "20%" }} onClick={handleEditToggle} />
                     </div>
-                    {deadline.checkpoints.map((checkpoint, index) => {
+                    {deadline?.checkpoints?.map((checkpoint, index) => {
                         const isCompleteCheckpoint = index === deadline.checkpoints.length - 1;
                         const isLastCheckpoint = isCompleteCheckpoint && index != 0;
                         const hasIncompleteCheckpoints = deadline.checkpoints
