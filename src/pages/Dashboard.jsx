@@ -55,7 +55,7 @@ export default function Dashboard({ profileData }) {
     }).length || 0;
     const highPriority = userData?.deadlines?.filter((deadline) => deadline.urgency === 'high').length || 0;
     const tasksCompleted = userData?.completedDeadlines?.length || 0;
-    const productivityScore = Math.ceil((tasksCompleted * 100) / (userData?.deadlines.length + tasksCompleted)) || 0;
+    const productivityScore = Math.ceil((tasksCompleted * 100) / (userData?.deadlines?.length || 0 + tasksCompleted)) || 0;
 
     setStats({
       dueThisWeek: dueThisWeek,

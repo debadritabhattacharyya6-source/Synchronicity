@@ -82,7 +82,7 @@ export default function Checkpoints({ data, onCancel }) {
                         </button>
                     </div>
                     <ul className='auth-bullets'>
-                        {checkpoints.map((checkpoint) => (
+                        {checkpoints.map((checkpoint, index) => (
                             <li key={checkpoint.id} style={{ fontSize: "20px", fontFamily: "Cinzel, serif", color: "rgba(255,255,255,0.7)", display: "flex", justifyContent: "space-between" }}>
                                 <div style={{ display: "flex", gap: "15px", alignItems: "center", justifyContent: "center" }}>
                                     <span className='diamond-bullet'></span>
